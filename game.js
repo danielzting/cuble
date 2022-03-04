@@ -85,9 +85,17 @@ document.addEventListener('pointerup', event => {
     const intersects = raycaster.intersectObjects(scene.children);
     // Ensure user clicked on a cubie
     if (intersects.length == 0) return;
+    // Get current color of cubie to determine next color
     const face = intersects[0].face;
     const colorAttribute = intersects[0].object.geometry.getAttribute('color');
-    const color = COLORS[colorIndex++ % COLORS.length];
+    const currentColor = new THREE.Color(colorAttribute.getX(face.a), colorAttribute.getY(face.b), colorAttribute.getZ(face.c));
+    let color = new THREE.Color();
+    for (let i = 0; i < COLORS.length; i++) {
+        if (currentColor.getHex() - COLORS[i].getHex() === 0) {
+            color = COLORS[++i % COLORS.length];
+            break;
+        }
+    }
     // Set color on selected triangle
     colorAttribute.setXYZ(face.a, color.r, color.g, color.b);
     colorAttribute.setXYZ(face.b, color.r, color.g, color.b);
