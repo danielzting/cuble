@@ -1,0 +1,3 @@
+# Cuble
+
+Wordle for cubers!
