@@ -12,13 +12,13 @@ controls.enablePan = false;
 let cursorPosition = new THREE.Vector2();
 
 // Add a cubie at the specified coordinates
-function addCubie(x, y, z) {
+function addCubie(x, y, z, colorList) {
     const geometry = new THREE.BoxGeometry().toNonIndexed();
     const material = new THREE.MeshBasicMaterial({ vertexColors: THREE.FaceColors });
     const positionAttribute = geometry.getAttribute('position');
     const colors = [];
     for (let i = 0; i < positionAttribute.count; i += 3) {
-        const color = new THREE.Color(Math.random() * 0xffffff);
+        const color = colorList[(i / 3) % colorList.length];
         for (let j = 0; j < 6; j++) { // Repeat once for each vertex of the two triangles that form a square face
             colors.push(color.r, color.g, color.b);
         }
@@ -31,10 +31,32 @@ function addCubie(x, y, z) {
 }
 
 // Generate the cube one cubie at a time
+const W = new THREE.Color('white');
+const O = new THREE.Color('orange');
+const G = new THREE.Color('green');
+const R = new THREE.Color('red');
+const B = new THREE.Color('blue');
+const Y = new THREE.Color('yellow');
+const X = new THREE.Color('black');
+const COLORS = [W, O, G, R, B, Y];
+const COLORMAP = [
+    [X, O, X, Y, X, B], [X, O, X, Y, X, X], [X, O, X, Y, G, X],
+    [X, O, X, X, X, B], [X, O, X, X, X, X], [X, O, X, X, G, X],
+    [X, O, W, X, X, B], [X, O, W, X, X, X], [X, O, W, X, G, X],
+
+    [X, X, X, Y, X, B], [X, X, X, Y, X, X], [X, X, X, Y, G, X],
+    [X, X, X, X, X, B], [X, X, X, X, X, X], [X, X, X, X, G, X],
+    [X, X, W, X, X, B], [X, X, W, X, X, X], [X, X, W, X, G, X],
+
+    [R, X, X, Y, X, B], [R, X, X, Y, X, X], [R, X, X, Y, G, X],
+    [R, X, X, X, X, B], [R, X, X, X, X, X], [R, X, X, X, G, X],
+    [R, X, W, X, X, B], [R, X, W, X, X, X], [R, X, W, X, G, X],
+];
+let colorIndex = 0;
 for (let x = -1; x <= 1; x++) {
     for (let y = -1; y <= 1; y++) {
         for (let z = -1; z <= 1; z++) {
-            addCubie(x, y, z);
+            addCubie(x, y, z, COLORMAP[colorIndex++]);
         }
     }
 }
@@ -47,17 +69,17 @@ animate();
 
 // Save cursor position so color won't change from rotating camera
 document.addEventListener('pointerdown', event => {
-    cursorPosition = new THREE.Vector2(event.screenX, event.screenY);
+    cursorPosition = new THREE.Vector2(event.clientX, event.clientY);
 });
 
 // Paint a cubie
 document.addEventListener('pointerup', event => {
     // Ensure cursor hasn't moved since pointer was down, as that is a rotation event
-    if (cursorPosition.distanceTo(new THREE.Vector2(event.screenX, event.screenY)) > 1) return;
+    if (cursorPosition.distanceTo(new THREE.Vector2(event.clientX, event.clientY)) > 1) return;
     // Cast ray
     const pointer = new THREE.Vector2();
     pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
-    pointer.y = - (event.clientY / window.innerHeight) * 2 + 1;
+    pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(pointer, camera);
     const intersects = raycaster.intersectObjects(scene.children);
@@ -65,7 +87,7 @@ document.addEventListener('pointerup', event => {
     if (intersects.length == 0) return;
     const face = intersects[0].face;
     const colorAttribute = intersects[0].object.geometry.getAttribute('color');
-    const color = new THREE.Color(Math.random() * 0xffffff);
+    const color = COLORS[colorIndex++ % COLORS.length];
     // Set color on selected triangle
     colorAttribute.setXYZ(face.a, color.r, color.g, color.b);
     colorAttribute.setXYZ(face.b, color.r, color.g, color.b);
