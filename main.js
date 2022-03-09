@@ -1,3 +1,7 @@
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import * as Cube from 'cubejs';
+
 // Set up scene, camera, renderer, and orbit controls
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -6,7 +10,7 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio ? window.devicePixelRatio : 1); // For Retina/HiDPI displays
 document.body.appendChild(renderer.domElement);
-controls = new THREE.OrbitControls(camera, renderer.domElement);
+const controls = new OrbitControls(camera, renderer.domElement);
 controls.enablePan = false;
 // Save cursor position on pointer down to distinguish rotating and painting
 let cursorPosition = new THREE.Vector2();
@@ -96,6 +100,7 @@ for (const face of FACEORDER) {
 }
 // Generate solution
 const solution = Cube.random().asString();
+console.log(solution);
 
 function animate() {
     if (throttle) {
