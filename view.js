@@ -2,6 +2,11 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 export default class CubeView {
+    // Canvas height needs to fit 9 cubies; divide by 10 for some margin
+    static SIZE = document.getElementById('results').height / 10;
+    static PADDING = 5;
+    static FACESIZE = CubeView.SIZE * 3 + CubeView.PADDING;
+
     constructor() {
         // Set up scene, camera, renderer, and orbit controls
         this.scene = new THREE.Scene();
@@ -13,6 +18,8 @@ export default class CubeView {
         document.body.appendChild(this.renderer.domElement);
         const controls = new OrbitControls(this.camera, this.renderer.domElement);
         controls.enablePan = false;
+        this.animate();
+        this.throttle = true;
 
         // Generate the cube one cubie at a time
         const U = new THREE.Color('white');
@@ -37,6 +44,7 @@ export default class CubeView {
             [R, X, U, X, X, B], [R, X, U, X, X, X], [R, X, U, X, F, X],
         ];
         this.COLORS = [U, R, F, D, L, B];
+        this.CHARTOCOLOR = { 'U': U, 'R': R, 'F': F, 'D': D, 'L': L, 'B': B };
         let colorIndex = 0;
         for (let x = 0; x < 3; x++) {
             for (let y = 0; y < 3; y++) {
@@ -45,8 +53,12 @@ export default class CubeView {
                 }
             }
         }
-        this.throttle = true;
-        this.animate();
+
+        // Fix to prevent canvas from looking blurry on Retina displays
+        let canvas = document.getElementById('results');
+        canvas.width *= 2;
+        canvas.height *= 2;
+        canvas.getContext('2d').scale(2, 2);
 
         // Automatically resize viewport when window is resized
         window.addEventListener('resize', () => {
@@ -76,6 +88,7 @@ export default class CubeView {
         cubie.name = id;
     }
 
+    /* Update the color given intersect data. Return true if and only if successful. */
     updateColor(intersect) {
         // Get current color of cubie
         const face = intersect.face;
@@ -117,6 +130,8 @@ export default class CubeView {
             setColor(face.a - 1, face.a - 2, face.a - 3, nextColor);
         }
         colorAttribute.needsUpdate = true;
+
+        return true;
     }
 
     findClickedCubie(event) {
@@ -138,5 +153,32 @@ export default class CubeView {
             requestAnimationFrame(this.animate.bind(this));
         }
         this.renderer.render(this.scene, this.camera);
+    }
+
+    drawSquare(x, y, color) {
+        let canvas = document.getElementById('results').getContext('2d');
+        canvas.fillStyle = `rgb(${color.r * 256}, ${color.g * 256}, ${color.b * 256})`;
+        canvas.fillRect(x, y, CubeView.SIZE, CubeView.SIZE);
+    }
+
+    drawFace(x, y, colors) {
+        for (let c = 0; c < 3; c++) {
+            for (let r = 0; r < 3; r++) {
+                // NOTE: rows and cols interchanged on x/y coordinate grid
+                this.drawSquare(
+                    x + c * CubeView.SIZE + c,
+                    y + r * CubeView.SIZE + r,
+                    this.CHARTOCOLOR[colors.charAt(r * 3 + c)]
+                );
+            }
+        }
+    }
+
+    drawCube(state) {
+        this.drawFace(CubeView.FACESIZE, 0, state.substring(0, 9));
+        for (let i = 0; i < 4; i++) {
+            this.drawFace(i * CubeView.FACESIZE, CubeView.FACESIZE, state.substring(i * 9 + 9, (i + 1) * 9 + 9));
+        }
+        this.drawFace(CubeView.FACESIZE, CubeView.FACESIZE * 2, state.substring(5 * 9));
     }
 }

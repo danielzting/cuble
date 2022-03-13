@@ -1,9 +1,11 @@
 body {
     margin: 0;
+    text-align: center;
 }
 
 button {
     position: fixed;
+    z-index: 1;
     left: 50%;
     bottom: 10%;
     transform: translateX(-50%);
@@ -11,4 +13,11 @@ button {
     padding: .5rem;
     border: none;
     font-family: Arial;
+}
+
+#results {
+    position: fixed;
+    top: 5%;
+    width: 300px;
+    transform: translateX(-35%);
 }
