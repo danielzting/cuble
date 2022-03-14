@@ -1,19 +1,7 @@
 body {
     margin: 0;
     text-align: center;
-}
-
-button {
-    position: fixed;
-    left: 50%;
-    bottom: 10%;
-    width: 300px;
-    transform: translateX(-50%);
-    background-color: white;
-    padding: .5rem;
-    border: none;
     font-family: 'Rubik', sans-serif;
-    font-size: larger;
 }
 
 #results {
@@ -21,4 +9,56 @@ button {
     top: 5%;
     width: 300px;
     transform: translateX(-33%);
+}
+
+#guess {
+    margin: 0 auto;
+    left: 0;
+    right: 0;
+    position: fixed;
+    bottom: 15%;
+    width: 250px;
+    height: 50px;
+    background-color: white;
+    padding: .5rem;
+    border: none;
+    font-size: larger;
+    user-select: none;
+}
+
+#guess:hover {
+    opacity: 90%;
+}
+
+#guess:active {
+    opacity: 80%;
+}
+
+#text {
+    position: fixed;
+    bottom: 5%;
+    width: 100%;
+    text-align: center;
+    color: white;
+    font-size: larger;
+    user-select: none;
+}
+
+.shake {
+    animation: shake .5s;
+}
+
+@keyframes shake {
+    10%, 90% {
+        transform: translate3d(-1px, 0, 0);
+    }
+    20%, 80% {
+        transform: translate3d(2px, 0, 0);
+    }
+    30%, 50%, 70% {
+        transform: translate3d(-4px, 0, 0);
+    }
+    40%, 60% {
+        transform: translate3d(4px, 0, 0);
+    }
 }

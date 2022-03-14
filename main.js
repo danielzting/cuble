@@ -27,7 +27,9 @@ document.addEventListener('pointerup', event => {
     }
 });
 
-document.getElementById('guess').onclick = check;
+const button = document.getElementById('guess');
+button.onclick = check;
+button.addEventListener('animationend', () => button.classList.remove('shake'));
 document.addEventListener('keyup', event => {
     if (event.key === "Enter") {
         check();
@@ -44,13 +46,8 @@ function check() {
             state.substring(27, 36);
     }
     if (!cubeModel.possible()) {
-        alert('That is not a valid cube state!');
+        button.classList.add('shake');
     } else {
         cubeView.drawCube(format(cubeModel.facelets.join('')), format(cubeModel.check()));
-        if (cubeModel.facelets.join('') == cubeModel.solution) {
-            alert('You won!');
-        } else {
-            alert('Try again!');
-        }
     }
 }
