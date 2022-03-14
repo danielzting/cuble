@@ -155,30 +155,48 @@ export default class CubeView {
         this.renderer.render(this.scene, this.camera);
     }
 
-    drawSquare(x, y, color) {
+    drawSquare(x, y, color, result) {
         let canvas = document.getElementById('results').getContext('2d');
         canvas.fillStyle = `rgb(${color.r * 256}, ${color.g * 256}, ${color.b * 256})`;
         canvas.fillRect(x, y, CubeView.SIZE, CubeView.SIZE);
+        if (result == '/' || result == 'X') {
+            canvas.beginPath();
+            canvas.moveTo(x, y);
+            canvas.lineTo(x + CubeView.SIZE, y + CubeView.SIZE);
+            canvas.stroke();
+        }
+        if (result == 'X') {
+            canvas.beginPath();
+            canvas.moveTo(x + CubeView.SIZE, y);
+            canvas.lineTo(x, y + CubeView.SIZE);
+            canvas.stroke();
+        }
     }
 
-    drawFace(x, y, colors) {
+    drawFace(x, y, colors, results) {
         for (let c = 0; c < 3; c++) {
             for (let r = 0; r < 3; r++) {
                 // NOTE: rows and cols interchanged on x/y coordinate grid
                 this.drawSquare(
                     x + c * CubeView.SIZE + c,
                     y + r * CubeView.SIZE + r,
-                    this.CHARTOCOLOR[colors.charAt(r * 3 + c)]
+                    this.CHARTOCOLOR[colors.charAt(r * 3 + c)],
+                    results.charAt(r * 3 + c)
                 );
             }
         }
     }
 
-    drawCube(state) {
-        this.drawFace(CubeView.FACESIZE, 0, state.substring(0, 9));
+    drawCube(colors, results) {
+        this.drawFace(CubeView.FACESIZE, 0, colors.substring(0, 9), results.substring(0, 9));
         for (let i = 0; i < 4; i++) {
-            this.drawFace(i * CubeView.FACESIZE, CubeView.FACESIZE, state.substring(i * 9 + 9, (i + 1) * 9 + 9));
+            this.drawFace(
+                i * CubeView.FACESIZE,
+                CubeView.FACESIZE,
+                colors.substring(i * 9 + 9, i * 9 + 18),
+                results.substring(i * 9 + 9, i * 9 + 18)
+            );
         }
-        this.drawFace(CubeView.FACESIZE, CubeView.FACESIZE * 2, state.substring(5 * 9));
+        this.drawFace(CubeView.FACESIZE, CubeView.FACESIZE * 2, colors.substring(45), results.substring(45));
     }
 }

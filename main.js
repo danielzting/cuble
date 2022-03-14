@@ -35,16 +35,16 @@ document.addEventListener('keyup', event => {
 });
 
 function check() {
-    const state = cubeModel.facelets.join('');
-    cubeView.drawCube(
-        state.substring(0, 9) +
-        state.substring(4 * 9, 5 * 9) +
-        state.substring(2 * 9, 3 * 9) +
-        state.substring(9, 2 * 9) +
-        state.substring(5 * 9) +
-        state.substring(3 * 9, 4 * 9)
-    );
-    if (cubeModel.match()) {
+    function format(state) {
+        return state.substring(0, 9) +
+            state.substring(4 * 9, 5 * 9) +
+            state.substring(2 * 9, 3 * 9) +
+            state.substring(9, 2 * 9) +
+            state.substring(5 * 9) +
+            state.substring(3 * 9, 4 * 9);
+    }
+    cubeView.drawCube(format(cubeModel.facelets.join('')), format(cubeModel.check()));
+    if (cubeModel.facelets.join('') == cubeModel.solution) {
         alert('You won!');
     } else {
         alert('Try again!');

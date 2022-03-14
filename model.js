@@ -45,7 +45,19 @@ export default class CubeModel {
         this.facelets[faceletIndex] = CubeModel.FACEORDER[nextFacelet % CubeModel.FACEORDER.length];
     }
 
-    match() {
-        return this.facelets.join('') == this.solution;
+    check() {
+        let result = '';
+        for (let i = 0; i < this.solution.length; i++) {
+            const faceStart = Math.floor(i / 9) * 9;
+            if (this.solution.charAt(i) === this.facelets[i]) {
+                result += '.';
+                // Check if same face has this color
+            } else if (this.solution.substring(faceStart, faceStart + 9).includes(this.facelets[i])) {
+                result += '/';
+            } else {
+                result += 'X';
+            }
+        }
+        return result;
     }
 }
