@@ -31,13 +31,14 @@ const button = document.getElementById('guess');
 button.onclick = check;
 button.addEventListener('animationend', () => button.classList.remove('shake'));
 document.addEventListener('keyup', event => {
-    if (event.key === "Enter") {
+    if (event.key === 'Enter') {
         check();
     }
 });
 
 function check() {
     function format(state) {
+        // Convert URFDLB to 2D view ULFRBD format
         return state.substring(0, 9) +
             state.substring(36, 45) +
             state.substring(18, 27) +

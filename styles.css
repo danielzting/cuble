@@ -4,7 +4,7 @@ body {
     font-family: 'Rubik', sans-serif;
 }
 
-#results {
+#feedback {
     position: fixed;
     top: 5%;
     width: 300px;
@@ -32,16 +32,6 @@ body {
 
 #guess:active {
     opacity: 80%;
-}
-
-#text {
-    position: fixed;
-    bottom: 5%;
-    width: 100%;
-    text-align: center;
-    color: white;
-    font-size: larger;
-    user-select: none;
 }
 
 .shake {
