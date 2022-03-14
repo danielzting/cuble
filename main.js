@@ -1,3 +1,5 @@
+import confetti from "canvas-confetti";
+
 import CubeModel from './model';
 import CubeView from './view';
 
@@ -50,5 +52,22 @@ function check() {
         button.classList.add('shake');
     } else {
         cubeView.drawCube(format(cubeModel.facelets.join('')), format(cubeModel.check()));
+        if (cubeModel.facelets.join('') === cubeModel.solution) {
+            const canvas = document.getElementById('confetti');
+            canvas.style.display = 'block';
+            setTimeout(() => {
+                let myConfetti = confetti.create(canvas, {
+                    resize: true,
+                    useWorker: true
+                });
+                myConfetti({
+                    particleCount: 100,
+                    spread: 135,
+                    shapes: ['square'],
+                    origin: { x: .5, y: .6 },
+                });
+                setTimeout(() => canvas.style.display = 'none', 3000);
+            }, CubeView.DELAY * 100);
+        }
     }
 }
