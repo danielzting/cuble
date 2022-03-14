@@ -5,19 +5,20 @@ body {
 
 button {
     position: fixed;
-    z-index: 1;
     left: 50%;
     bottom: 10%;
+    width: 300px;
     transform: translateX(-50%);
     background-color: white;
     padding: .5rem;
     border: none;
-    font-family: Arial;
+    font-family: 'Rubik', sans-serif;
+    font-size: larger;
 }
 
 #results {
     position: fixed;
     top: 5%;
     width: 300px;
-    transform: translateX(-35%);
+    transform: translateX(-33%);
 }

@@ -1,4 +1,5 @@
 import * as Cube from 'cubejs';
+import solver from 'rubiks-cube-solver';
 
 export default class CubeModel {
     static FACEORDER = 'URFDLB';
@@ -47,17 +48,59 @@ export default class CubeModel {
 
     check() {
         let result = '';
-        for (let i = 0; i < this.solution.length; i++) {
-            const faceStart = Math.floor(i / 9) * 9;
-            if (this.solution.charAt(i) === this.facelets[i]) {
-                result += '.';
-                // Check if same face has this color
-            } else if (this.solution.substring(faceStart, faceStart + 9).includes(this.facelets[i])) {
-                result += '/';
-            } else {
-                result += 'X';
+        // Keep track of how many of each color guess we've seen
+        // This is important to mark a square "yellow" versus "gray"
+        // Example: if answer = "AABCD" and guess = "AAAAA", first A = green, second A = yellow, rest = gray
+        // We want to emulate this behavior
+        for (let i = 0; i < 6; i++) {
+            const faceSquares = this.solution.substring(9 * i, 9 * i + 4)
+                + this.solution.substring(9 * i + 5, 9 * i + 9);
+            // Yellows allowed = total of that color - correct of that color
+            const yellowsLeft = new Map();
+            for (const face of CubeModel.FACEORDER) {
+                yellowsLeft.set(face, faceSquares.split(face).length);
+            }
+            for (let j = 0; j < 9; j++) {
+                const index = i * 9 + j;
+                const color = this.facelets[index];
+                if (this.solution.charAt(index) === color) {
+                    yellowsLeft.set(color, yellowsLeft.get(color) - 1);
+                }
+            }
+            for (let j = 0; j < 9; j++) {
+                const index = i * 9 + j;
+                const color = this.facelets[index];
+                // Check if same face has this color, excluding centers
+                if (this.solution.charAt(index) === color) {
+                    // Facelet is correct color
+                    result += '.';
+                } else if (faceSquares.includes(this.facelets[index]) && yellowsLeft.get(color) > 0) {
+                    // Facelet is wrong color but another non-center piece on the same face has this color
+                    result += '/';
+                    yellowsLeft.set(color, yellowsLeft.get(color) - 1);
+                } else {
+                    // This color does not appear anywhere on this face
+                    result += 'X';
+                }
             }
         }
         return result;
+    }
+
+    possible() {
+        const state = this.facelets.join('').toLowerCase();
+        // HACKY: Determine if state is valid by attempting to solve and bailing out on error
+        try {
+            // Convert URFDLB to solver FRUDLB format
+            solver([
+                state.substring(18, 27),
+                state.substring(9, 18),
+                state.substring(0, 9),
+                state.substring(27)
+            ].join(''));
+            return true;
+        } catch (e) {
+            return false;
+        }
     }
 }

@@ -37,16 +37,20 @@ document.addEventListener('keyup', event => {
 function check() {
     function format(state) {
         return state.substring(0, 9) +
-            state.substring(4 * 9, 5 * 9) +
-            state.substring(2 * 9, 3 * 9) +
-            state.substring(9, 2 * 9) +
-            state.substring(5 * 9) +
-            state.substring(3 * 9, 4 * 9);
+            state.substring(36, 45) +
+            state.substring(18, 27) +
+            state.substring(9, 18) +
+            state.substring(45) +
+            state.substring(27, 36);
     }
-    cubeView.drawCube(format(cubeModel.facelets.join('')), format(cubeModel.check()));
-    if (cubeModel.facelets.join('') == cubeModel.solution) {
-        alert('You won!');
+    if (!cubeModel.possible()) {
+        alert('That is not a valid cube state!');
     } else {
-        alert('Try again!');
+        cubeView.drawCube(format(cubeModel.facelets.join('')), format(cubeModel.check()));
+        if (cubeModel.facelets.join('') == cubeModel.solution) {
+            alert('You won!');
+        } else {
+            alert('Try again!');
+        }
     }
 }
