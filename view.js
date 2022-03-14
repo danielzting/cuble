@@ -22,13 +22,13 @@ export default class CubeView {
         this.throttle = true;
 
         // Generate the cube one cubie at a time
-        const U = new THREE.Color('white');
-        const R = new THREE.Color('red');
-        const F = new THREE.Color('green');
-        const D = new THREE.Color('yellow');
-        const L = new THREE.Color('orange');
-        const B = new THREE.Color('blue');
-        const X = new THREE.Color('black');
+        const U = new THREE.Color(0xFFFFFF);
+        const R = new THREE.Color(0xEA2003);
+        const F = new THREE.Color(0x4DE432);
+        const D = new THREE.Color(0xF6ED35);
+        const L = new THREE.Color(0xF5921D);
+        const B = new THREE.Color(0x62B3E1);
+        const X = new THREE.Color(0x000000);
         const COLORMAP = [
             // Left slice
             [X, L, X, D, X, B], [X, L, X, D, X, X], [X, L, X, D, F, X],
