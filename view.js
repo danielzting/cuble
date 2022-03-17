@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import Cubie from './cubie';
 
 export default class CubeView {
     // Canvas height needs to fit 9 cubies; divide by 10 for some margin
@@ -16,47 +17,33 @@ export default class CubeView {
     delay = 0;
 
     constructor() {
-        // Set up scene, camera, renderer, and orbit controls
+        // Set up scene, camera, renderer, and controls
+
         this.scene = new THREE.Scene();
+
         this.camera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.camera.position.set(5, 5, 5);
+
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(window.devicePixelRatio ? window.devicePixelRatio : 1);
-        document.body.appendChild(this.renderer.domElement);
+
         const controls = new OrbitControls(this.camera, this.renderer.domElement);
         controls.enablePan = false;
-        this.animate();
 
-        // Generate the cube one cubie at a time
-        const U = new THREE.Color(0xFFFFFF);
-        const R = new THREE.Color(0xEA2003);
-        const F = new THREE.Color(0x4DE432);
-        const D = new THREE.Color(0xF6ED35);
-        const L = new THREE.Color(0xF5921D);
-        const B = new THREE.Color(0x62B3E1);
-        const X = new THREE.Color(0x000000);
-        const COLORMAP = [
-            // Left slice
-            [X, L, X, D, X, B], [X, L, X, D, X, X], [X, L, X, D, F, X],
-            [X, L, X, X, X, B], [X, L, X, X, X, X], [X, L, X, X, F, X],
-            [X, L, U, X, X, B], [X, L, U, X, X, X], [X, L, U, X, F, X],
-            // Middle slice
-            [X, X, X, D, X, B], [X, X, X, D, X, X], [X, X, X, D, F, X],
-            [X, X, X, X, X, B], [X, X, X, X, X, X], [X, X, X, X, F, X],
-            [X, X, U, X, X, B], [X, X, U, X, X, X], [X, X, U, X, F, X],
-            // Right slice
-            [R, X, X, D, X, B], [R, X, X, D, X, X], [R, X, X, D, F, X],
-            [R, X, X, X, X, B], [R, X, X, X, X, X], [R, X, X, X, F, X],
-            [R, X, U, X, X, B], [R, X, U, X, X, X], [R, X, U, X, F, X],
+        this.animate();
+        document.body.appendChild(this.renderer.domElement);
+
+        // Generate cubies
+        const CUBIE_ORDER = [
+            'DLB', 'DL', 'DFL', 'BL', 'L', 'FL', 'UBL', 'UL', 'ULF',
+            'DB', 'D', 'DF', 'B', '', 'F', 'UB', 'U', 'UF',
+            'DBR', 'DR', 'DRF', 'BR', 'R', 'FR', 'URB', 'UR', 'UFR',
         ];
-        this.COLORS = [U, R, F, D, L, B];
-        this.CHARTOCOLOR = { 'U': U, 'R': R, 'F': F, 'D': D, 'L': L, 'B': B };
-        let colorIndex = 0;
-        for (let x = 0; x < 3; x++) {
-            for (let y = 0; y < 3; y++) {
-                for (let z = 0; z < 3; z++) {
-                    this.addCubie(x - 1, y - 1, z - 1, COLORMAP[colorIndex++], 9 * x + 3 * y + z);
+        for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 3; j++) {
+                for (let k = 0; k < 3; k++) {
+                    this.addCubie(i - 1, j - 1, k - 1, CUBIE_ORDER[i * 9 + j * 3 + k]);
                 }
             }
         }
@@ -75,24 +62,55 @@ export default class CubeView {
         });
     }
 
-    addCubie(x, y, z, colorList, id) {
-        const geometry = new THREE.BoxGeometry().toNonIndexed();
+    /**
+     * Add a cubie of the given name at the specified coordinates.
+     * @param {number} x x-coordinate
+     * @param {number} y y-coordinate
+     * @param {number} z z-coordinate
+     * @param {string} name piece to add that must consist of zero or more characters from 'URFDLB'
+     */
+    addCubie(x, y, z, name) {
+        const COLORMAP = {
+            U: new THREE.Color(0xFFFFFF),
+            R: new THREE.Color(0xEA2003),
+            F: new THREE.Color(0x4DE432),
+            D: new THREE.Color(0xF6ED35),
+            L: new THREE.Color(0xF5921D),
+            B: new THREE.Color(0x62B3E1),
+            X: new THREE.Color(0x000000),
+        };
+        const SCALE = .95;
+
+        // Generate all-black material
         const material = new THREE.MeshBasicMaterial({ vertexColors: THREE.FaceColors });
-        const positionAttribute = geometry.getAttribute('position');
         const colors = [];
-        for (let i = 0; i < positionAttribute.count; i += 3) {
-            const color = colorList[(i / 3) % colorList.length];
-            for (let j = 0; j < 6; j++) {
-                // Repeat once for each vertex of the two triangles that form a square face
-                colors.push(color.r, color.g, color.b);
+        // 36 vertices = 6 faces * 2 triangles/face * 3 vertices/triangle
+        for (let i = 0; i < 36; i++) {
+            colors.push(COLORMAP['X'].r, COLORMAP['X'].g, COLORMAP['X'].b);
+        }
+
+        // Set up geometry
+        const geometry = new THREE.BoxGeometry().toNonIndexed();
+        geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+        // Add cubie to scene
+        const cubie = new THREE.Mesh(geometry, material);
+        cubie.position.set(x, y, z);
+        cubie.scale.set(SCALE, SCALE, SCALE); // Leave gap to distinguish cubies
+        this.scene.add(cubie);
+
+        // Set appropriate colors on correct faces
+        // Thankfully, cubes in three.js are always placed with face indices pointing in the same direction
+        // For example, face indices 0 through 5 inclusive will always point right (in our camera setup)
+        // We can take advantage of this to easily find the indices we need to set for a given piece name
+        const FACEMAP = { R: 0, L: 6, U: 12, D: 18, F: 24, B: 30 };
+        const colorAttribute = geometry.getAttribute('color');
+        for (const face of name) {
+            // 6 vertices = 1 face * 3 triangles/face * 2 vertices/triangle
+            for (let i = FACEMAP[face]; i < FACEMAP[face] + 6; i++) {
+                colorAttribute.setXYZ(i, COLORMAP[face].r, COLORMAP[face].g, COLORMAP[face].b);
             }
         }
-        geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-        const cubie = new THREE.Mesh(geometry, material);
-        this.scene.add(cubie);
-        cubie.position.set(x, y, z);
-        cubie.scale.set(.95, .95, .95); // Leave gap to distinguish cubies
-        cubie.name = id;
     }
 
     /* Update the color given intersect data. Return true if and only if successful. */
