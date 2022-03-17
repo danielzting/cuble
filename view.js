@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import Cubie from './cubie';
 
 export default class CubeView {
     // Canvas height needs to fit 9 cubies; divide by 10 for some margin
@@ -12,7 +11,7 @@ export default class CubeView {
     static DELAY = 10;
 
     // Throttle the viewport to 10 FPS when not rotating to save power
-    throttle = true;
+    throttle = false;
     // Accumulated timeout for displaying facelet
     delay = 0;
 
@@ -30,6 +29,36 @@ export default class CubeView {
 
         const controls = new OrbitControls(this.camera, this.renderer.domElement);
         controls.enablePan = false;
+        controls.enableZoom = false;
+
+        this.selection = new THREE.Mesh(
+            new THREE.BoxGeometry(),
+            new THREE.MeshBasicMaterial({ color: 'black', transparent: true, opacity: 0.25 }),
+        );
+        this.selection.visible = false;
+        this.scene.add(this.selection);
+
+        // Save cursor position on pointer down to distinguish rotating and painting
+        this.renderer.domElement.addEventListener('pointerdown', event => {
+            this.throttle = false;
+            this.cursorPos = [event.clientX, event.clientY];
+        });
+        this.renderer.domElement.addEventListener('pointerup', event => {
+            this.throttle = true;
+            // Ensure cursor hasn't moved since pointer was down, as that is a rotation event
+            if (Math.hypot(event.clientX - this.cursorPos[0], event.clientY - this.cursorPos[1]) > 1) return;
+
+            const clicked = this.findClickedCubie(event);
+            // Ignore clicks that don't intersect with a cubie
+            if (clicked == undefined) return;
+            if (clicked.object.position.equals(this.selection.position)) {
+                this.selection.position.set(0, 0, 0);
+                this.selection.visible = false;
+            } else {
+                this.selection.position.copy(clicked.object.position);
+                this.selection.visible = true;
+            }
+        });
 
         this.animate();
         document.body.appendChild(this.renderer.domElement);
@@ -96,7 +125,10 @@ export default class CubeView {
         // Add cubie to scene
         const cubie = new THREE.Mesh(geometry, material);
         cubie.position.set(x, y, z);
-        cubie.scale.set(SCALE, SCALE, SCALE); // Leave gap to distinguish cubies
+        // Slightly scale cubie down to visibly separate them
+        cubie.scale.set(SCALE, SCALE, SCALE);
+        cubie.name = name;
+
         this.scene.add(cubie);
 
         // Set appropriate colors on correct faces
