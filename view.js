@@ -15,6 +15,16 @@ export default class CubeView {
     // Accumulated timeout for displaying facelet
     delay = 0;
 
+    static COLORMAP = {
+        U: new THREE.Color(0xFFFFFF),
+        R: new THREE.Color(0xEA2003),
+        F: new THREE.Color(0x4DE432),
+        D: new THREE.Color(0xF6ED35),
+        L: new THREE.Color(0xF5921D),
+        B: new THREE.Color(0x62B3E1),
+        X: new THREE.Color(0x000000),
+    };
+
     constructor() {
         // Set up scene, camera, renderer, and controls
 
@@ -38,28 +48,6 @@ export default class CubeView {
         this.selection.visible = false;
         this.scene.add(this.selection);
 
-        // Save cursor position on pointer down to distinguish rotating and painting
-        this.renderer.domElement.addEventListener('pointerdown', event => {
-            this.throttle = false;
-            this.cursorPos = [event.clientX, event.clientY];
-        });
-        this.renderer.domElement.addEventListener('pointerup', event => {
-            this.throttle = true;
-            // Ensure cursor hasn't moved since pointer was down, as that is a rotation event
-            if (Math.hypot(event.clientX - this.cursorPos[0], event.clientY - this.cursorPos[1]) > 1) return;
-
-            const clicked = this.findClickedCubie(event);
-            // Ignore clicks that don't intersect with a cubie
-            if (clicked == undefined) return;
-            if (clicked.object.position.equals(this.selection.position)) {
-                this.selection.position.set(0, 0, 0);
-                this.selection.visible = false;
-            } else {
-                this.selection.position.copy(clicked.object.position);
-                this.selection.visible = true;
-            }
-        });
-
         this.animate();
         document.body.appendChild(this.renderer.domElement);
 
@@ -77,8 +65,57 @@ export default class CubeView {
             }
         }
 
+        // Save cursor position on pointer down to distinguish rotating and painting
+        this.renderer.domElement.addEventListener('pointerdown', event => {
+            this.throttle = false;
+            this.cursorPos = [event.clientX, event.clientY];
+        });
+        this.renderer.domElement.addEventListener('pointerup', event => {
+            this.throttle = true;
+            // Ensure cursor hasn't moved since pointer was down, as that is a rotation event
+            if (Math.hypot(event.clientX - this.cursorPos[0], event.clientY - this.cursorPos[1]) > 1) return;
+
+            const clicked = this.findClickedCubie(event);
+            // Ignore clicks that don't intersect with a cubie
+            if (clicked == undefined) return;
+            // Set up cubie picker
+            const picker = document.getElementById('picker');
+            picker.replaceChildren();
+            if (clicked.object.position.equals(this.selection.position)) {
+                this.selection.position.set(0, 0, 0);
+                this.selection.visible = false;
+            } else {
+                this.selection.position.copy(clicked.object.position);
+                this.selection.visible = true;
+                // Don't show cubie picker for centers
+                if (clicked.object.name.length === 1) return;
+                for (const cubie of CUBIE_ORDER) {
+                    // Only let user pick cubies of same edge/corner type
+                    if (cubie.length !== clicked.object.name.length) continue;
+                    // Initialize button
+                    const buttonsPerRow = (cubie.length == 2) ? 6 : 4;
+                    const button = picker.appendChild(document.createElement('button'));
+                    button.classList.add('cubie');
+                    button.style.width = (picker.offsetWidth - 10 * buttonsPerRow) / buttonsPerRow + 'px';
+                    // Draw cubie onto button
+                    const canvas = button.appendChild(document.createElement('canvas'));
+                    canvas.width = button.clientWidth * 2;
+                    canvas.height = button.clientHeight * 2;
+                    canvas.style.width = button.clientWidth + 'px';
+                    canvas.style.height = button.clientHeight + 'px';
+                    const ctx = canvas.getContext('2d');
+                    for (let i = 0; i < cubie.length; i++) {
+                        const color = CubeView.COLORMAP[cubie.charAt(i)];
+                        const perWidth = canvas.width / cubie.length;
+                        ctx.fillStyle = `rgb(${color.r * 256}, ${color.g * 256}, ${color.b * 256})`;
+                        ctx.fillRect(perWidth * i, 0, perWidth, canvas.height);
+                    }
+                }
+            }
+        });
+
         // Fix to prevent canvas from looking blurry on Retina displays
-        let canvas = document.getElementById('feedback');
+        const canvas = document.getElementById('feedback');
         canvas.width *= 2;
         canvas.height *= 2;
         canvas.getContext('2d').scale(2, 2);
@@ -96,18 +133,9 @@ export default class CubeView {
      * @param {number} x x-coordinate
      * @param {number} y y-coordinate
      * @param {number} z z-coordinate
-     * @param {string} name piece to add that must consist of zero or more characters from 'URFDLB'
+     * @param {string} name cubie to add that must consist of zero or more characters from 'URFDLB'
      */
     addCubie(x, y, z, name) {
-        const COLORMAP = {
-            U: new THREE.Color(0xFFFFFF),
-            R: new THREE.Color(0xEA2003),
-            F: new THREE.Color(0x4DE432),
-            D: new THREE.Color(0xF6ED35),
-            L: new THREE.Color(0xF5921D),
-            B: new THREE.Color(0x62B3E1),
-            X: new THREE.Color(0x000000),
-        };
         const SCALE = .95;
 
         // Generate all-black material
@@ -115,7 +143,7 @@ export default class CubeView {
         const colors = [];
         // 36 vertices = 6 faces * 2 triangles/face * 3 vertices/triangle
         for (let i = 0; i < 36; i++) {
-            colors.push(COLORMAP['X'].r, COLORMAP['X'].g, COLORMAP['X'].b);
+            colors.push(CubeView.COLORMAP['X'].r, CubeView.COLORMAP['X'].g, CubeView.COLORMAP['X'].b);
         }
 
         // Set up geometry
@@ -140,55 +168,11 @@ export default class CubeView {
         for (const face of name) {
             // 6 vertices = 1 face * 3 triangles/face * 2 vertices/triangle
             for (let i = FACEMAP[face]; i < FACEMAP[face] + 6; i++) {
-                colorAttribute.setXYZ(i, COLORMAP[face].r, COLORMAP[face].g, COLORMAP[face].b);
+                colorAttribute.setXYZ(
+                    i, CubeView.COLORMAP[face].r, CubeView.COLORMAP[face].g, CubeView.COLORMAP[face].b
+                );
             }
         }
-    }
-
-    /* Update the color given intersect data. Return true if and only if successful. */
-    updateColor(intersect) {
-        // Get current color of cubie
-        const face = intersect.face;
-        const colorAttribute = intersect.object.geometry.getAttribute('color');
-        const currentColor = new THREE.Color(
-            colorAttribute.getX(face.a),
-            colorAttribute.getY(face.b),
-            colorAttribute.getZ(face.c)
-        );
-
-        // Prevent user from changing color of black internal faces
-        if (currentColor.equals(new THREE.Color('black'))) return;
-        // Prevent user from changing color of center facelets
-        if ([4, 10, 12, 14, 16, 22].includes(intersect.object.name)) return;
-
-        // Use current color to determine next color
-        let nextColor = new THREE.Color();
-        for (let i = 0; i < this.COLORS.length; i++) {
-            // Cannot use equals() because of floating point imprecision
-            if (currentColor.getHex() - this.COLORS[i].getHex() === 0) {
-                nextColor = this.COLORS[++i % this.COLORS.length];
-                break;
-            }
-        }
-
-        // Helper method to set color attribute
-        function setColor(f1, f2, f3, color) {
-            colorAttribute.setXYZ(f1, color.r, color.g, color.b);
-            colorAttribute.setXYZ(f2, color.r, color.g, color.b);
-            colorAttribute.setXYZ(f3, color.r, color.g, color.b);
-        }
-
-        // Set color on selected triangle
-        setColor(face.a, face.b, face.c, nextColor);
-        // HACKY: Determine which face indices make up the other triangle on the same square face
-        if (face.a % 2 === 0) {
-            setColor(face.c + 1, face.c + 2, face.c + 3, nextColor);
-        } else {
-            setColor(face.a - 1, face.a - 2, face.a - 3, nextColor);
-        }
-        colorAttribute.needsUpdate = true;
-
-        return true;
     }
 
     findClickedCubie(event) {
@@ -213,7 +197,7 @@ export default class CubeView {
     }
 
     drawSquare(x, y, color, result) {
-        let canvas = document.getElementById('feedback').getContext('2d');
+        const canvas = document.getElementById('feedback').getContext('2d');
         canvas.fillStyle = `rgb(${color.r * 256}, ${color.g * 256}, ${color.b * 256})`;
         canvas.fillRect(x, y, CubeView.SIZE, CubeView.SIZE);
         if (result == '/' || result == 'X') {

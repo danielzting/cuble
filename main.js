@@ -1,4 +1,4 @@
-import confetti from "canvas-confetti";
+import confetti from 'canvas-confetti';
 
 import CubeModel from './model';
 import CubeView from './view';
@@ -6,6 +6,7 @@ import CubeView from './view';
 const cubeView = new CubeView();
 const cubeModel = new CubeModel();
 
+// Set up guess button
 const button = document.getElementById('guess');
 button.onclick = check;
 button.addEventListener('animationend', () => button.classList.remove('shake'));
