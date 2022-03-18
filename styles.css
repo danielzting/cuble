@@ -30,26 +30,29 @@ body {
     height: 50px;
 }
 
-#guess {
-    margin: 0 auto;
-    left: 0;
-    right: 0;
+#actions {
     position: fixed;
     bottom: 5%;
     width: 300px;
-    height: 50px;
-    background-color: white;
-    padding: .5rem;
-    border: none;
-    font-size: larger;
-    user-select: none;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    justify-content: space-between;
 }
 
-#guess:hover {
+.action {
+    width: 50px;
+    height: 50px;
+    font-size: larger;
+    border: none;
+    margin: 5px;
+}
+
+button:hover {
     opacity: 90%;
 }
 
-#guess:active {
+button:active {
     opacity: 80%;
 }
 

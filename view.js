@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import Cubie from './cubie.js';
 
 export default class CubeView {
     // Canvas height needs to fit 9 cubies; divide by 10 for some margin
@@ -11,7 +12,7 @@ export default class CubeView {
     static DELAY = 10;
 
     // Throttle the viewport to 10 FPS when not rotating to save power
-    throttle = false;
+    throttle = true;
     // Accumulated timeout for displaying facelet
     delay = 0;
 
@@ -60,10 +61,13 @@ export default class CubeView {
         for (let i = 0; i < 3; i++) {
             for (let j = 0; j < 3; j++) {
                 for (let k = 0; k < 3; k++) {
-                    this.addCubie(i - 1, j - 1, k - 1, CUBIE_ORDER[i * 9 + j * 3 + k]);
+                    this.scene.add(new Cubie(i - 1, j - 1, k - 1, CUBIE_ORDER[i * 9 + j * 3 + k]));
                 }
             }
         }
+
+        // HACK: Change order of cubies so picker buttons are arranged more logically
+        CUBIE_ORDER.sort().reverse();
 
         // Save cursor position on pointer down to distinguish rotating and painting
         this.renderer.domElement.addEventListener('pointerdown', event => {
@@ -80,10 +84,14 @@ export default class CubeView {
             if (clicked == undefined) return;
             // Set up cubie picker
             const picker = document.getElementById('picker');
+            const erase = document.getElementById('erase');
+            const rotate = document.getElementById('rotate');
             picker.replaceChildren();
             if (clicked.object.position.equals(this.selection.position)) {
                 this.selection.position.set(0, 0, 0);
                 this.selection.visible = false;
+                erase.disabled = true;
+                rotate.disabled = true;
             } else {
                 this.selection.position.copy(clicked.object.position);
                 this.selection.visible = true;
@@ -110,7 +118,12 @@ export default class CubeView {
                         ctx.fillStyle = `rgb(${color.r * 256}, ${color.g * 256}, ${color.b * 256})`;
                         ctx.fillRect(perWidth * i, 0, perWidth, canvas.height);
                     }
+                    button.onclick = () => clicked.object.setColors(cubie);
                 }
+                erase.disabled = false;
+                erase.onclick = () => clicked.object.setColors('XXX');
+                rotate.disabled = false;
+                rotate.onclick = () => clicked.object.rotate();
             }
         });
 
@@ -126,53 +139,6 @@ export default class CubeView {
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(window.innerWidth, window.innerHeight);
         });
-    }
-
-    /**
-     * Add a cubie of the given name at the specified coordinates.
-     * @param {number} x x-coordinate
-     * @param {number} y y-coordinate
-     * @param {number} z z-coordinate
-     * @param {string} name cubie to add that must consist of zero or more characters from 'URFDLB'
-     */
-    addCubie(x, y, z, name) {
-        const SCALE = .95;
-
-        // Generate all-black material
-        const material = new THREE.MeshBasicMaterial({ vertexColors: THREE.FaceColors });
-        const colors = [];
-        // 36 vertices = 6 faces * 2 triangles/face * 3 vertices/triangle
-        for (let i = 0; i < 36; i++) {
-            colors.push(CubeView.COLORMAP['X'].r, CubeView.COLORMAP['X'].g, CubeView.COLORMAP['X'].b);
-        }
-
-        // Set up geometry
-        const geometry = new THREE.BoxGeometry().toNonIndexed();
-        geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-
-        // Add cubie to scene
-        const cubie = new THREE.Mesh(geometry, material);
-        cubie.position.set(x, y, z);
-        // Slightly scale cubie down to visibly separate them
-        cubie.scale.set(SCALE, SCALE, SCALE);
-        cubie.name = name;
-
-        this.scene.add(cubie);
-
-        // Set appropriate colors on correct faces
-        // Thankfully, cubes in three.js are always placed with face indices pointing in the same direction
-        // For example, face indices 0 through 5 inclusive will always point right (in our camera setup)
-        // We can take advantage of this to easily find the indices we need to set for a given piece name
-        const FACEMAP = { R: 0, L: 6, U: 12, D: 18, F: 24, B: 30 };
-        const colorAttribute = geometry.getAttribute('color');
-        for (const face of name) {
-            // 6 vertices = 1 face * 3 triangles/face * 2 vertices/triangle
-            for (let i = FACEMAP[face]; i < FACEMAP[face] + 6; i++) {
-                colorAttribute.setXYZ(
-                    i, CubeView.COLORMAP[face].r, CubeView.COLORMAP[face].g, CubeView.COLORMAP[face].b
-                );
-            }
-        }
     }
 
     findClickedCubie(event) {
