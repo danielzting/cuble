@@ -67,6 +67,8 @@ export default class CubeView {
         });
         this.renderer.domElement.addEventListener('pointerup', event => {
             this.throttle = true;
+            // Don't do anything if already won
+            if (document.getElementById('actions').style.display === 'none') return;
             // Ensure cursor hasn't moved since pointer was down, as that is a rotation event
             if (Math.hypot(event.clientX - this.cursorPos[0], event.clientY - this.cursorPos[1]) > 1) return;
             const clicked = this.findClickedCubie(event);
