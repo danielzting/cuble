@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import Cubie from './cubie.js';
+import COLORS from './colors.js';
 
 export default class CubeView {
     // Canvas height needs to fit 9 cubies; divide by 10 for some margin
@@ -15,16 +16,6 @@ export default class CubeView {
     throttle = true;
     // Accumulated timeout for displaying facelet
     delay = 0;
-
-    static COLORMAP = {
-        U: new THREE.Color(0xFFFFFF),
-        R: new THREE.Color(0xEA2003),
-        F: new THREE.Color(0x4DE432),
-        D: new THREE.Color(0xF6ED35),
-        L: new THREE.Color(0xF5921D),
-        B: new THREE.Color(0x62B3E1),
-        X: new THREE.Color(0x000000),
-    };
 
     constructor() {
         // Set up scene, camera, renderer, and controls
@@ -53,7 +44,7 @@ export default class CubeView {
         document.body.appendChild(this.renderer.domElement);
 
         // Generate cubies
-        const CUBIE_ORDER = [
+        const CUBIES = [
             'DLB', 'DL', 'DFL', 'BL', 'L', 'FL', 'UBL', 'UL', 'ULF',
             'DB', 'D', 'DF', 'B', '', 'F', 'UB', 'U', 'UF',
             'DBR', 'DR', 'DRF', 'BR', 'R', 'FR', 'URB', 'UR', 'UFR',
@@ -61,13 +52,10 @@ export default class CubeView {
         for (let i = 0; i < 3; i++) {
             for (let j = 0; j < 3; j++) {
                 for (let k = 0; k < 3; k++) {
-                    this.scene.add(new Cubie(i - 1, j - 1, k - 1, CUBIE_ORDER[i * 9 + j * 3 + k]));
+                    this.scene.add(new Cubie(i - 1, j - 1, k - 1, CUBIES[i * 9 + j * 3 + k]));
                 }
             }
         }
-
-        // HACK: Change order of cubies so picker buttons are arranged more logically
-        CUBIE_ORDER.sort().reverse();
 
         // Save cursor position on pointer down to distinguish rotating and painting
         this.renderer.domElement.addEventListener('pointerdown', event => {
@@ -78,53 +66,10 @@ export default class CubeView {
             this.throttle = true;
             // Ensure cursor hasn't moved since pointer was down, as that is a rotation event
             if (Math.hypot(event.clientX - this.cursorPos[0], event.clientY - this.cursorPos[1]) > 1) return;
-
             const clicked = this.findClickedCubie(event);
             // Ignore clicks that don't intersect with a cubie
             if (clicked == undefined) return;
-            // Set up cubie picker
-            const picker = document.getElementById('picker');
-            const erase = document.getElementById('erase');
-            const rotate = document.getElementById('rotate');
-            picker.replaceChildren();
-            if (clicked.object.position.equals(this.selection.position)) {
-                this.selection.position.set(0, 0, 0);
-                this.selection.visible = false;
-                erase.disabled = true;
-                rotate.disabled = true;
-            } else {
-                this.selection.position.copy(clicked.object.position);
-                this.selection.visible = true;
-                // Don't show cubie picker for centers
-                if (clicked.object.name.length === 1) return;
-                for (const cubie of CUBIE_ORDER) {
-                    // Only let user pick cubies of same edge/corner type
-                    if (cubie.length !== clicked.object.name.length) continue;
-                    // Initialize button
-                    const buttonsPerRow = (cubie.length == 2) ? 6 : 4;
-                    const button = picker.appendChild(document.createElement('button'));
-                    button.classList.add('cubie');
-                    button.style.width = (picker.offsetWidth - 10 * buttonsPerRow) / buttonsPerRow + 'px';
-                    // Draw cubie onto button
-                    const canvas = button.appendChild(document.createElement('canvas'));
-                    canvas.width = button.clientWidth * 2;
-                    canvas.height = button.clientHeight * 2;
-                    canvas.style.width = button.clientWidth + 'px';
-                    canvas.style.height = button.clientHeight + 'px';
-                    const ctx = canvas.getContext('2d');
-                    for (let i = 0; i < cubie.length; i++) {
-                        const color = CubeView.COLORMAP[cubie.charAt(i)];
-                        const perWidth = canvas.width / cubie.length;
-                        ctx.fillStyle = `rgb(${color.r * 256}, ${color.g * 256}, ${color.b * 256})`;
-                        ctx.fillRect(perWidth * i, 0, perWidth, canvas.height);
-                    }
-                    button.onclick = () => clicked.object.setColors(cubie);
-                }
-                erase.disabled = false;
-                erase.onclick = () => clicked.object.setColors('XXX');
-                rotate.disabled = false;
-                rotate.onclick = () => clicked.object.rotate();
-            }
+            this.initPicker(clicked.object);
         });
 
         // Fix to prevent canvas from looking blurry on Retina displays
@@ -141,6 +86,65 @@ export default class CubeView {
         });
     }
 
+    initPicker(cubie) {
+        // Set up cubie picker
+        const picker = document.getElementById('picker');
+        const erase = document.getElementById('erase');
+        const rotate = document.getElementById('rotate');
+        picker.replaceChildren();
+        if (cubie.position.equals(this.selection.position)) {
+            this.selection.position.set(0, 0, 0);
+            this.selection.visible = false;
+            erase.disabled = true;
+            rotate.disabled = true;
+        } else {
+            this.selection.position.copy(cubie.position);
+            this.selection.visible = true;
+            const CUBIES = [];
+            if (cubie.name.length === 2) {
+                CUBIES.push(
+                    'UB', 'UL', 'DB', 'DL', 'BL', 'FL',
+                    'UF', 'UR', 'DF', 'DR', 'BR', 'FR',
+                );
+            } else if (cubie.name.length === 3) {
+                CUBIES.push(
+                    'UBL', 'ULF', 'UFR', 'URB',
+                    'DLB', 'DFL', 'DRF', 'DBR',
+                );
+            } else {
+                return;
+            }
+            for (const piece of CUBIES) {
+                // Initialize button
+                const buttonsPerRow = (piece.length == 2) ? 6 : 4;
+                const button = picker.appendChild(document.createElement('button'));
+                button.classList.add('cubie');
+                button.style.width = (picker.offsetWidth - 10 * buttonsPerRow) / buttonsPerRow + 'px';
+
+                // Draw cubie onto button
+                const canvas = button.appendChild(document.createElement('canvas'));
+                canvas.width = button.clientWidth;
+                canvas.height = button.clientHeight;
+                const ctx = canvas.getContext('2d');
+                for (let i = 0; i < piece.length; i++) {
+                    const color = COLORS[piece.charAt(i)];
+                    const perWidth = canvas.width / piece.length;
+                    ctx.fillStyle = `rgb(${color.r * 256}, ${color.g * 256}, ${color.b * 256})`;
+                    ctx.fillRect(perWidth * i, 0, perWidth, canvas.height);
+                }
+                button.onclick = () => {
+                    cubie.setColors(piece);
+                }
+            }
+
+            // Enable buttons
+            erase.disabled = false;
+            erase.onclick = () => cubie.erase();
+            rotate.disabled = false;
+            rotate.onclick = () => cubie.rotate();
+        }
+    }
+
     findClickedCubie(event) {
         // Cast ray
         const pointer = new THREE.Vector2();
@@ -154,10 +158,10 @@ export default class CubeView {
     animate() {
         if (this.throttle) {
             setTimeout(() => {
-                requestAnimationFrame(this.animate.bind(this));
+                requestAnimationFrame(() => this.animate());
             }, 1000 / 10);
         } else {
-            requestAnimationFrame(this.animate.bind(this));
+            requestAnimationFrame(() => this.animate());
         }
         this.renderer.render(this.scene, this.camera);
     }

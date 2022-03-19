@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import COLORS from './colors.js';
 
 export default class Cubie extends THREE.Mesh {
     /**
@@ -34,6 +35,7 @@ export default class Cubie extends THREE.Mesh {
 
     /**
      * Change the colors of this cubie. Before this method is called, the name field MUST have been set.
+     * The number of colors must match the type of the cubie: three for corners and two for edges.
      * 
      * For a corner, the order is as follows: the first character must be U or D, then the next two
      * characters are the left and right colors when looking at the corner from the perspective of
@@ -44,16 +46,10 @@ export default class Cubie extends THREE.Mesh {
      * @param {string} colors color to add, must consist of zero or more characters from 'URFDLB'
      */
     setColors(colors) {
+        if (colors.length !== this.name.length) {
+            throw `Expected ${this.name.length} colors but got ${colors}.`;
+        }
         this.colors = colors;
-        const COLORMAP = {
-            U: new THREE.Color(0xFFFFFF),
-            R: new THREE.Color(0xEA2003),
-            F: new THREE.Color(0x4DE432),
-            D: new THREE.Color(0xF6ED35),
-            L: new THREE.Color(0xF5921D),
-            B: new THREE.Color(0x62B3E1),
-            X: new THREE.Color(0xAAAAAA),
-        };
         // Set appropriate colors on correct faces
         // Thankfully, cubes in three.js are always placed with face indices pointing in the same direction
         // For example, face indices 0 through 5 inclusive will always point right (in our camera setup)
@@ -61,13 +57,20 @@ export default class Cubie extends THREE.Mesh {
         const FACEMAP = { R: 0, L: 6, U: 12, D: 18, F: 24, B: 30 };
         const colorAttribute = this.geometry.getAttribute('color');
         for (let i = 0; i < this.name.length; i++) {
-            const color = COLORMAP[colors.charAt(i)];
+            const color = COLORS[colors.charAt(i)];
             // 6 vertices = 1 face * 3 triangles/face * 2 vertices/triangle
             for (let j = 0; j < 6; j++) {
                 colorAttribute.setXYZ(FACEMAP[this.name.charAt(i)] + j, color.r, color.g, color.b);
             }
         }
         this.geometry.attributes.color.needsUpdate = true;
+    }
+
+    /**
+     * Remove the colors from the cubie.
+     */
+    erase() {
+        this.setColors('XXX'.substring(0, this.name.length));
     }
 
     /**
