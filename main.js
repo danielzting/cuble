@@ -1,15 +1,13 @@
 import confetti from 'canvas-confetti';
+import RubiksCubeSolver from './lib/solver.js';
+import Cube from './cube.js';
 
-import CubeModel from './model';
-import CubeView from './view';
-
-const cubeView = new CubeView();
-const cubeModel = new CubeModel();
+const cube = new Cube();
 
 // Set up guess button
-const button = document.getElementById('guess');
-button.onclick = check;
-button.addEventListener('animationend', () => button.classList.remove('shake'));
+const guess = document.getElementById('guess');
+guess.onclick = check;
+guess.addEventListener('animationend', () => guess.classList.remove('shake'));
 document.addEventListener('keyup', event => {
     if (event.key === 'Enter') {
         check();
@@ -17,17 +15,10 @@ document.addEventListener('keyup', event => {
 });
 
 function check() {
-    function format(state) {
-        // Convert URFDLB to 2D view ULFRBD format
-        return state.substring(0, 9) +
-            state.substring(36, 45) +
-            state.substring(18, 27) +
-            state.substring(9, 18) +
-            state.substring(45) +
-            state.substring(27, 36);
-    }
-    if (!cubeModel.possible()) {
-        button.classList.add('shake');
+    const solver = new RubiksCubeSolver();
+    solver.currentState = cube.permutation.concat(cube.orientation);
+    if (!solver.verifyState()) {
+        guess.classList.add('shake');
     } else {
         cubeView.drawCube(format(cubeModel.facelets.join('')), format(cubeModel.check()));
         if (cubeModel.facelets.join('') === cubeModel.solution) {

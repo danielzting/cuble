@@ -17,6 +17,9 @@ export default class CubeView {
     // Accumulated timeout for displaying facelet
     delay = 0;
 
+    permutation = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
+    orientation = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
     constructor() {
         // Set up scene, camera, renderer, and controls
 
@@ -134,15 +137,29 @@ export default class CubeView {
                 }
                 button.onclick = () => {
                     cubie.setColors(piece);
+                    this.permutation[this.getStateIndex(cubie.name)] = this.getStateIndex(piece);
+                    this.orientation[this.getStateIndex(cubie.name)] = 0;
                 }
             }
 
             // Enable buttons
             erase.disabled = false;
-            erase.onclick = () => cubie.erase();
+            erase.onclick = () => {
+                cubie.erase();
+                this.permutation[this.getStateIndex(cubie.name)] = -1;
+            };
             rotate.disabled = false;
-            rotate.onclick = () => cubie.rotate();
+            rotate.onclick = () => {
+                cubie.rotate();
+                this.orientation[this.getStateIndex(cubie.name)]++;
+                this.orientation[this.getStateIndex(cubie.name)] %= cubie.name.length;
+            }
         }
+    }
+
+    getStateIndex(cubie) {
+        return ['UF', 'UR', 'UB', 'UL', 'DF', 'DR', 'DB', 'DL', 'FR', 'FL', 'BR', 'BL',
+            'UFR', 'URB', 'UBL', 'ULF', 'DRF', 'DFL', 'DLB', 'DBR'].indexOf(cubie);
     }
 
     findClickedCubie(event) {
