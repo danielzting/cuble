@@ -91,13 +91,13 @@ export default class CubeView {
         });
     }
 
-    initPicker(cubie) {
+    initPicker(cubie, keepSelection) {
         // Set up cubie picker
         const picker = document.getElementById('picker');
         const erase = document.getElementById('erase');
         const rotate = document.getElementById('rotate');
         picker.replaceChildren();
-        if (cubie.position.equals(this.selection.position)) {
+        if (!keepSelection && cubie.position.equals(this.selection.position)) {
             this.selection.position.set(0, 0, 0);
             this.selection.visible = false;
             erase.disabled = true;
@@ -107,17 +107,9 @@ export default class CubeView {
             this.selection.visible = true;
             const CUBIES = [];
             if (cubie.name.length === 2) {
-                CUBIES.push(
-                    'UB', 'UL', 'DB', 'DL', 'BL', 'FL',
-                    'UF', 'UR', 'DF', 'DR', 'BR', 'FR',
-                );
+                CUBIES.push('UB', 'UL', 'DB', 'DL', 'BL', 'FL', 'UF', 'UR', 'DF', 'DR', 'BR', 'FR');
             } else if (cubie.name.length === 3) {
-                CUBIES.push(
-                    'UBL', 'ULF', 'UFR', 'URB',
-                    'DLB', 'DFL', 'DRF', 'DBR',
-                );
-            } else {
-                return;
+                CUBIES.push('UBL', 'ULF', 'UFR', 'URB', 'DLB', 'DFL', 'DRF', 'DBR');
             }
             for (const piece of CUBIES) {
                 // Initialize button
@@ -137,10 +129,12 @@ export default class CubeView {
                     ctx.fillStyle = `rgb(${color.r * 256}, ${color.g * 256}, ${color.b * 256})`;
                     ctx.fillRect(perWidth * i, 0, perWidth, canvas.height);
                 }
+                button.disabled = this.permutation.includes(this.getStateIndex(piece));
                 button.onclick = () => {
                     cubie.setColors(piece);
                     this.permutation[this.getStateIndex(cubie.name)] = this.getStateIndex(piece);
                     this.orientation[this.getStateIndex(cubie.name)] = 0;
+                    this.initPicker(cubie, true);
                 }
             }
 
@@ -149,6 +143,7 @@ export default class CubeView {
             erase.onclick = () => {
                 cubie.erase();
                 this.permutation[this.getStateIndex(cubie.name)] = -1;
+                this.initPicker(cubie, true);
             };
             rotate.disabled = false;
             rotate.onclick = () => {

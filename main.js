@@ -39,7 +39,7 @@ document.addEventListener('keyup', event => {
 
 function check() {
     solver.currentState = cube.permutation.concat(cube.orientation);
-    if (!solver.verifyState()) {
+    if (cube.permutation.includes(-1) || !solver.verifyState()) {
         guess.classList.add('shake');
     } else {
         if (JSON.stringify(cube.permutation.concat(cube.orientation)) === JSON.stringify(answerState)) {
