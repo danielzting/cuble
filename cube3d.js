@@ -3,19 +3,13 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import Cubie from './cubie.js';
 import COLORS from './colors.js';
 
-export default class CubeView {
-    // Canvas height needs to fit 9 cubies; divide by 10 for some margin
-    static SIZE = document.getElementById('feedback').height / 10;
-    // Additional padding between faces
-    static PADDING = 5;
-    static FACESIZE = CubeView.SIZE * 3 + CubeView.PADDING;
-    // Delay between displaying each facelet of feedback in ms
-    static DELAY = 10;
+export default class Cube3D {
+    // Order of cubies in permutation and orientation states
+    static CUBIE_ORDER = ['UF', 'UR', 'UB', 'UL', 'DF', 'DR', 'DB', 'DL', 'FR', 'FL', 'BR', 'BL',
+        'UFR', 'URB', 'UBL', 'ULF', 'DRF', 'DFL', 'DLB', 'DBR'];
 
     // Throttle the viewport to 10 FPS when not rotating to save power
     throttle = true;
-    // Accumulated timeout for displaying facelet
-    delay = 0;
 
     permutation = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
     orientation = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
@@ -73,15 +67,9 @@ export default class CubeView {
             if (Math.hypot(event.clientX - this.cursorPos[0], event.clientY - this.cursorPos[1]) > 1) return;
             const clicked = this.findClickedCubie(event);
             // Ignore clicks that don't intersect with a cubie
-            if (clicked == undefined) return;
+            if (clicked === undefined) return;
             this.initPicker(clicked.object);
         });
-
-        // Fix to prevent canvas from looking blurry on Retina displays
-        const canvas = document.getElementById('feedback');
-        canvas.width *= 2;
-        canvas.height *= 2;
-        canvas.getContext('2d').scale(2, 2);
 
         // Automatically resize viewport when window is resized
         window.addEventListener('resize', () => {
@@ -111,9 +99,10 @@ export default class CubeView {
             } else if (cubie.name.length === 3) {
                 CUBIES.push('UBL', 'ULF', 'UFR', 'URB', 'DLB', 'DFL', 'DRF', 'DBR');
             }
+            const stateIndex = Cube3D.getStateIndex(cubie.name);
             for (const piece of CUBIES) {
                 // Initialize button
-                const buttonsPerRow = (piece.length == 2) ? 6 : 4;
+                const buttonsPerRow = (piece.length === 2) ? 6 : 4;
                 const button = picker.appendChild(document.createElement('button'));
                 button.classList.add('cubie');
                 button.style.width = (picker.offsetWidth - 10 * buttonsPerRow) / buttonsPerRow + 'px';
@@ -129,11 +118,11 @@ export default class CubeView {
                     ctx.fillStyle = `rgb(${color.r * 256}, ${color.g * 256}, ${color.b * 256})`;
                     ctx.fillRect(perWidth * i, 0, perWidth, canvas.height);
                 }
-                button.disabled = this.permutation.includes(this.getStateIndex(piece));
+                button.disabled = this.permutation.includes(Cube3D.getStateIndex(piece));
                 button.onclick = () => {
                     cubie.setColors(piece);
-                    this.permutation[this.getStateIndex(cubie.name)] = this.getStateIndex(piece);
-                    this.orientation[this.getStateIndex(cubie.name)] = 0;
+                    this.permutation[stateIndex] = Cube3D.getStateIndex(piece);
+                    this.orientation[stateIndex] = 0;
                     this.initPicker(cubie, true);
                 }
             }
@@ -142,21 +131,20 @@ export default class CubeView {
             erase.disabled = false;
             erase.onclick = () => {
                 cubie.erase();
-                this.permutation[this.getStateIndex(cubie.name)] = -1;
+                this.permutation[stateIndex] = -1;
                 this.initPicker(cubie, true);
             };
             rotate.disabled = false;
             rotate.onclick = () => {
                 cubie.rotate();
-                this.orientation[this.getStateIndex(cubie.name)]++;
-                this.orientation[this.getStateIndex(cubie.name)] %= cubie.name.length;
+                this.orientation[stateIndex]++;
+                this.orientation[stateIndex] %= cubie.name.length;
             }
         }
     }
 
-    getStateIndex(cubie) {
-        return ['UF', 'UR', 'UB', 'UL', 'DF', 'DR', 'DB', 'DL', 'FR', 'FL', 'BR', 'BL',
-            'UFR', 'URB', 'UBL', 'ULF', 'DRF', 'DFL', 'DLB', 'DBR'].indexOf(cubie);
+    static getStateIndex(cubie) {
+        return Cube3D.CUBIE_ORDER.indexOf(cubie);
     }
 
     findClickedCubie(event) {
@@ -178,56 +166,5 @@ export default class CubeView {
             requestAnimationFrame(() => this.animate());
         }
         this.renderer.render(this.scene, this.camera);
-    }
-
-    drawSquare(x, y, color, result) {
-        const canvas = document.getElementById('feedback').getContext('2d');
-        canvas.fillStyle = `rgb(${color.r * 256}, ${color.g * 256}, ${color.b * 256})`;
-        canvas.fillRect(x, y, CubeView.SIZE, CubeView.SIZE);
-        if (result == '/' || result == 'X') {
-            canvas.beginPath();
-            canvas.moveTo(x, y);
-            canvas.lineTo(x + CubeView.SIZE, y + CubeView.SIZE);
-            canvas.stroke();
-        }
-        if (result == 'X') {
-            canvas.beginPath();
-            canvas.moveTo(x + CubeView.SIZE, y);
-            canvas.lineTo(x, y + CubeView.SIZE);
-            canvas.stroke();
-        }
-    }
-
-    drawFace(x, y, colors, results) {
-        for (let c = 0; c < 3; c++) {
-            for (let r = 0; r < 3; r++) {
-                // NOTE: rows and cols interchanged on x/y coordinate grid
-                setTimeout(() => {
-                    this.drawSquare(
-                        x + c * CubeView.SIZE + c,
-                        y + r * CubeView.SIZE + r,
-                        this.CHARTOCOLOR[colors.charAt(r * 3 + c)],
-                        results.charAt(r * 3 + c)
-                    );
-                }, this.delay);
-                this.delay += CubeView.DELAY;
-            }
-        }
-    }
-
-    drawCube(colors, results) {
-        this.delay = 0;
-        const canvas = document.getElementById('feedback');
-        canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
-        this.drawFace(CubeView.FACESIZE, 0, colors.substring(0, 9), results.substring(0, 9));
-        for (let i = 0; i < 4; i++) {
-            this.drawFace(
-                i * CubeView.FACESIZE,
-                CubeView.FACESIZE,
-                colors.substring(i * 9 + 9, i * 9 + 18),
-                results.substring(i * 9 + 9, i * 9 + 18)
-            );
-        }
-        this.drawFace(CubeView.FACESIZE, CubeView.FACESIZE * 2, colors.substring(45), results.substring(45));
     }
 }
