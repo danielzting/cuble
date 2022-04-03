@@ -9,25 +9,24 @@ const cube = new Cube3D();
 // Generate random states until one is found valid
 const rng = seedrandom(new Date().toDateString());
 const solver = new RubiksCubeSolver();
-let answerState = [];
 do {
-    // Shuffle permutation
-    const permutation = [...cube.permutation];
-    for (let i = permutation.length - 1; i > 0; i--) {
-        let j = Math.floor(rng() * (i + 1));
-        let temp = permutation[i];
-        permutation[i] = permutation[j];
-        permutation[j] = temp;
-    }
-    // Generate random orientations
+    // Generate random permutation
+    const edgePermutation = shuffle([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
+    const cornerPermutation = shuffle([12, 13, 14, 15, 16, 17, 18, 19]);
+    const permutation = [...edgePermutation, ...cornerPermutation];
+    // Generate orientations
     const orientation = [];
-    for (let i = 0; i < permutation.length; i++) {
+    // Edges only have 2 orientations
+    for (let i = 0; i < 12; i++) {
+        orientation.push(Math.floor(rng() * 2));
+    }
+    // Corners can have 3 orientations
+    for (let i = 0; i < 8; i++) {
         orientation.push(Math.floor(rng() * 3));
     }
-    answerState = permutation.concat(orientation);
-    solver.currentState = answerState;
+    solver.currentState = [...permutation, ...orientation];
 } while (!solver.verifyState());
-answerState = cube.permutation.concat(cube.orientation);
+const answerColors = stateToFaceletColors(solver.currentState);
 
 // Set up guess button
 const guess = document.getElementById('guess');
@@ -40,13 +39,14 @@ document.addEventListener('keyup', event => {
 });
 
 function check() {
-    solver.currentState = cube.permutation.concat(cube.orientation);
+    solver.currentState = [...cube.permutation, ...cube.orientation];
     // solver.js does not check all numbers are in valid [0, 20) range
     if (cube.permutation.includes(-1) || !solver.verifyState()) {
         guess.classList.add('shake');
     } else {
-        // JavaScript doesn't have a native array equality function LOL? Compare JSON serializations
-        if (JSON.stringify(cube.permutation.concat(cube.orientation)) === JSON.stringify(answerState)) {
+        const currentColors = stateToFaceletColors(solver.currentState);
+        feedback.drawCube(currentColors, getFeedback(currentColors, answerColors));
+        if (currentColors.toString() === answerColors.toString()) {
             const canvas = document.getElementById('confetti');
             canvas.style.display = 'block';
             setTimeout(() => {
@@ -65,34 +65,62 @@ function check() {
                 document.getElementById('actions').style.display = 'none';
                 setTimeout(() => canvas.style.display = 'none', 3000);
             }, Cube2D.DELAY * 100);
-        } else {
-            feedback.drawCube(stateToFaceletColors(cube.permutation, cube.orientation), '.'.repeat(54));
-            console.log(answerState);
         }
     }
 }
 
-function stateToFaceletColors(permutation, orientation) {
-    const FACELETS = [
-        'UBL U', 'UB U', 'URB U', 'UL U', 'U', 'UR U', 'ULF U', 'UF U', 'UFR U', // U
-        'UBL L', 'UL L', 'ULF L', 'BL L', 'L', 'FL L', 'DLB L', 'DL L', 'DFL L', // L
-        'ULF F', 'UF F', 'UFR F', 'FL F', 'F', 'FR F', 'DFL F', 'DF F', 'DRF F', // F
-        'UFR R', 'UR R', 'URB R', 'FR R', 'R', 'BR R', 'DRF R', 'DR R', 'DBR R', // R
-        'URB B', 'UB B', 'UBL B', 'BR B', 'B', 'BL B', 'DBR B', 'DB B', 'DLB B', // B
-        'DFL D', 'DF D', 'DRF D', 'DL D', 'D', 'DR D', 'DLB D', 'DB D', 'DBR D', // D
-    ];
-    const state = [];
-    for (let i = 0; i < FACELETS.length; i++) {
-        if (FACELETS[i].length === 1) {
-            state.push(FACELETS[i]);
-        } else {
-            const cubie = FACELETS[i].split(' ')[0];
-            const face = FACELETS[i].split(' ')[1];
-            const index = permutation[Cube3D.getStateIndex(cubie)];
-            const actualPermutation = Cube3D.CUBIE_ORDER[index];
-            const actualOrientation = cubie.indexOf(face) + orientation[index];
-            state.push(actualPermutation.charAt(actualOrientation % actualPermutation.length));
+function stateToFaceletColors(state) {
+    const permutation = state.slice(0, 20);
+    const orientation = state.slice(20);
+    // Convert a permutation and orientation state into the 54 facelet colors required by Cube2D
+    const FACELETS = {
+        U: ['UBL', 'UB', 'URB', 'UL', 'U', 'UR', 'ULF', 'UF', 'UFR'],
+        L: ['UBL', 'UL', 'ULF', 'BL', 'L', 'FL', 'DLB', 'DL', 'DFL'],
+        F: ['ULF', 'UF', 'UFR', 'FL', 'F', 'FR', 'DFL', 'DF', 'DRF'],
+        R: ['UFR', 'UR', 'URB', 'FR', 'R', 'BR', 'DRF', 'DR', 'DBR'],
+        B: ['URB', 'UB', 'UBL', 'BR', 'B', 'BL', 'DBR', 'DB', 'DLB'],
+        D: ['DFL', 'DF', 'DRF', 'DL', 'D', 'DR', 'DLB', 'DB', 'DBR'],
+    };
+    const colors = [];
+    for (const face of 'ULFRBD') {
+        for (const facelet of FACELETS[face]) {
+            if (facelet.length === 1) {
+                colors.push(facelet);
+            } else {
+                const index = Cube3D.getStateIndex(facelet);
+                let actualPermutation = Cube3D.CUBIE_ORDER[permutation[index]];
+                let actualOrientation = facelet.indexOf(face);
+                if (facelet.length === 2) {
+                    actualOrientation += orientation[index];
+                // HACK: swap orientations 1 and 2
+                } else if (facelet.length === 3) {
+                    actualOrientation += 3 - orientation[index];
+                }
+                colors.push(actualPermutation.charAt(actualOrientation % actualPermutation.length));
+            }
         }
     }
-    return state.join('');
+    return colors;
+}
+
+function getFeedback(actual, expected) {
+    const feedback = [];
+    for (let i = 0; i < actual.length; i++) {
+        if (actual[i] === expected[i]) {
+            feedback.push('.');
+        } else {
+            feedback.push('X');
+        }
+    }
+    return feedback;
+}
+
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        let j = Math.floor(rng() * (i + 1));
+        let temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+    return array;
 }

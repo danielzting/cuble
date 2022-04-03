@@ -9,7 +9,7 @@ body {
     top: 5%;
     width: 300px;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translateX(-35%);
 }
 
 #picker {

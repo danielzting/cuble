@@ -25,16 +25,16 @@ export default class Cube2D {
         this.height = canvas.height;
     }
 
-    drawSquare(x, y, color, result) {
+    drawSquare(x, y, color, feedback) {
         this.canvas.fillStyle = `rgb(${color.r * 256}, ${color.g * 256}, ${color.b * 256})`;
         this.canvas.fillRect(x, y, Cube2D.SIZE, Cube2D.SIZE);
-        if (result !== '.') {
+        if (feedback !== '.') {
             this.canvas.beginPath();
             this.canvas.moveTo(x, y);
             this.canvas.lineTo(x + Cube2D.SIZE, y + Cube2D.SIZE);
             this.canvas.stroke();
         }
-        if (result === 'X') {
+        if (feedback === 'X') {
             this.canvas.beginPath();
             this.canvas.moveTo(x + Cube2D.SIZE, y);
             this.canvas.lineTo(x, y + Cube2D.SIZE);
@@ -42,7 +42,7 @@ export default class Cube2D {
         }
     }
 
-    drawFace(x, y, colors, results) {
+    drawFace(x, y, colors, feedback) {
         for (let c = 0; c < 3; c++) {
             for (let r = 0; r < 3; r++) {
                 // NOTE: rows and cols interchanged on x/y coordinate grid
@@ -50,8 +50,8 @@ export default class Cube2D {
                     this.drawSquare(
                         x + c * Cube2D.SIZE + c,
                         y + r * Cube2D.SIZE + r,
-                        COLORS[colors.charAt(r * 3 + c)],
-                        results.charAt(r * 3 + c)
+                        COLORS[colors[r * 3 + c]],
+                        feedback[r * 3 + c]
                     );
                 }, this.delay);
                 this.delay += Cube2D.DELAY;
@@ -60,23 +60,23 @@ export default class Cube2D {
     }
 
     /**
-     * Draw the actual facelets with appropriate feedback (X or slash) based on expected facelets.
+     * Draw a 2D projection of the cube with the given feedback.
      * Order is ULFRBD, left-to-right row-major order (like reading English).
-     * @param {string} expected solution facelets
-     * @param {string} actual user-submitted facelets
+     * @param {Array<string>} colors 54 characters representing the color of each facelet
+     * @param {Array<string>} feedback 54 characters (period, slash or X) to overlay on top of each facelet
      */
-    drawCube(expected, actual) {
+    drawCube(colors, feedback) {
         this.delay = 0;
         this.canvas.clearRect(0, 0, this.width, this.height);
-        this.drawFace(Cube2D.FACESIZE, 0, expected.substring(0, 9), actual.substring(0, 9));
+        this.drawFace(Cube2D.FACESIZE, 0, colors.slice(0, 9), feedback.slice(0, 9));
         for (let i = 0; i < 4; i++) {
             this.drawFace(
                 i * Cube2D.FACESIZE,
                 Cube2D.FACESIZE,
-                expected.substring(i * 9 + 9, i * 9 + 18),
-                actual.substring(i * 9 + 9, i * 9 + 18)
+                colors.slice(i * 9 + 9, i * 9 + 18),
+                feedback.slice(i * 9 + 9, i * 9 + 18)
             );
         }
-        this.drawFace(Cube2D.FACESIZE, Cube2D.FACESIZE * 2, expected.substring(45), actual.substring(45));
+        this.drawFace(Cube2D.FACESIZE, Cube2D.FACESIZE * 2, colors.slice(45), feedback.slice(45));
     }
 }
