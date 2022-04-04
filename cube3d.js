@@ -137,8 +137,10 @@ export default class Cube3D {
             rotate.disabled = false;
             rotate.onclick = () => {
                 cubie.rotate();
-                this.orientation[stateIndex]++;
-                this.orientation[stateIndex] %= cubie.name.length;
+                this.orientation[stateIndex]--;
+                if (this.orientation[stateIndex] < 0) {
+                    this.orientation[stateIndex] = cubie.name.length - 1;
+                }
             }
         }
     }
