@@ -6,10 +6,6 @@ export default class Cube2D {
     // Additional padding between faces
     static PADDING = 5;
     static FACESIZE = Cube2D.SIZE * 3 + Cube2D.PADDING;
-    // Delay between displaying each facelet of feedback in ms
-    static DELAY = 10;
-    // Accumulated timeout for displaying facelet
-    delay = 0;
 
     /**
      * Initialize a 2D projection of a cube.
@@ -46,15 +42,12 @@ export default class Cube2D {
         for (let c = 0; c < 3; c++) {
             for (let r = 0; r < 3; r++) {
                 // NOTE: rows and cols interchanged on x/y coordinate grid
-                setTimeout(() => {
-                    this.drawSquare(
-                        x + c * Cube2D.SIZE + c,
-                        y + r * Cube2D.SIZE + r,
-                        COLORS[colors[r * 3 + c]],
-                        feedback[r * 3 + c]
-                    );
-                }, this.delay);
-                this.delay += Cube2D.DELAY;
+                this.drawSquare(
+                    x + c * Cube2D.SIZE + c,
+                    y + r * Cube2D.SIZE + r,
+                    COLORS[colors[r * 3 + c]],
+                    feedback[r * 3 + c]
+                );
             }
         }
     }
@@ -66,7 +59,6 @@ export default class Cube2D {
      * @param {Array<string>} feedback 54 characters (period, slash or X) to overlay on top of each facelet
      */
     drawCube(colors, feedback) {
-        this.delay = 0;
         this.canvas.clearRect(0, 0, this.width, this.height);
         this.drawFace(Cube2D.FACESIZE, 0, colors.slice(0, 9), feedback.slice(0, 9));
         for (let i = 0; i < 4; i++) {
