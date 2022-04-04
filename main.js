@@ -92,7 +92,7 @@ function stateToFaceletColors(state) {
                 let actualOrientation = facelet.indexOf(face);
                 if (facelet.length === 2) {
                     actualOrientation += orientation[index];
-                // HACK: swap orientations 1 and 2
+                    // HACK: swap orientations 1 and 2
                 } else if (facelet.length === 3) {
                     actualOrientation += 3 - orientation[index];
                 }
@@ -103,13 +103,34 @@ function stateToFaceletColors(state) {
     return colors;
 }
 
-function getFeedback(actual, expected) {
+function getFeedback(guess, answer) {
     const feedback = [];
-    for (let i = 0; i < actual.length; i++) {
-        if (actual[i] === expected[i]) {
-            feedback.push('.');
-        } else {
-            feedback.push('X');
+    for (let i = 0; i < 6; i++) {
+        const edgeColorsAvailable = { U: 0, L: 0, F: 0, R: 0, B: 0, D: 0 };
+        const cornerColorsAvailable = { U: 0, L: 0, F: 0, R: 0, B: 0, D: 0 };
+        for (let j = 0; j < 9; j++) {
+            const index = i * 9 + j;
+            if (guess[index] !== answer[index]) {
+                if (j % 2 === 0) {
+                    cornerColorsAvailable[answer[index]]++;
+                } else {
+                    edgeColorsAvailable[answer[index]]++;
+                }
+            }
+        }
+        for (let j = 0; j < 9; j++) {
+            const index = i * 9 + j;
+            if (guess[index] === answer[index]) {
+                feedback.push('.');
+            } else {
+                if (j % 2 === 0 && cornerColorsAvailable[guess[index]]-- > 0) {
+                    feedback.push('/');
+                } else if (j % 2 !== 0 && edgeColorsAvailable[guess[index]]-- > 0) {
+                    feedback.push('/');
+                } else {
+                    feedback.push('X');
+                }
+            }
         }
     }
     return feedback;
