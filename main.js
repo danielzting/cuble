@@ -37,8 +37,11 @@ document.addEventListener('keyup', event => {
         check();
     }
 });
+let guesses = 0;
+// check();
 
 function check() {
+    guesses++;
     solver.currentState = [...cube.permutation, ...cube.orientation];
     // solver.js does not check all numbers are in valid [0, 20) range
     if (cube.permutation.includes(-1) || !solver.verifyState()) {
@@ -47,6 +50,7 @@ function check() {
         const currentColors = stateToFaceletColors(solver.currentState);
         feedback.drawCube(currentColors, getFeedback(currentColors, answerColors));
         if (currentColors.toString() === answerColors.toString()) {
+            // Show confetti
             const canvas = document.getElementById('confetti');
             canvas.style.display = 'block';
             setTimeout(() => {
@@ -61,8 +65,20 @@ function check() {
                     origin: { x: .5, y: .6 },
                 });
                 cube.selection.visible = false;
-                document.getElementById('picker').style.display = 'none';
-                document.getElementById('actions').style.display = 'none';
+                document.getElementById('picker').replaceChildren();
+                const share = document.createElement('button');
+                share.innerText = '📋 Share';
+                share.classList.add('action');
+                share.style.flex = '1';
+                share.onclick = () => {
+                    const today = new Date().toISOString().substring(0, 10);
+                    const result = `Cuble ${today}: ${guesses} guesses`;
+                    navigator.clipboard.writeText(result).then(
+                        () => share.innerText = '✅ Copied to clipboard!',
+                        () => share.innerText = '❌ Could not copy to clipboard!',
+                    );
+                }
+                document.getElementById('actions').replaceChildren(share);
                 setTimeout(() => canvas.style.display = 'none', 3000);
             }, Cube2D.DELAY * 100);
         }
@@ -92,8 +108,8 @@ function stateToFaceletColors(state) {
                 let actualOrientation = facelet.indexOf(face);
                 if (facelet.length === 2) {
                     actualOrientation += orientation[index];
-                    // HACK: swap orientations 1 and 2
                 } else if (facelet.length === 3) {
+                    // HACK: swap orientations 1 and 2
                     actualOrientation += 3 - orientation[index];
                 }
                 colors.push(actualPermutation.charAt(actualOrientation % actualPermutation.length));
@@ -106,6 +122,8 @@ function stateToFaceletColors(state) {
 function getFeedback(guess, answer) {
     const feedback = [];
     for (let i = 0; i < 6; i++) {
+        // Count how many each color on the solution face were guessed incorrectly
+        // This is used to distinguish "gray" versus "yellow" feedback
         const edgeColorsAvailable = { U: 0, L: 0, F: 0, R: 0, B: 0, D: 0 };
         const cornerColorsAvailable = { U: 0, L: 0, F: 0, R: 0, B: 0, D: 0 };
         for (let j = 0; j < 9; j++) {
@@ -123,6 +141,7 @@ function getFeedback(guess, answer) {
             if (guess[index] === answer[index]) {
                 feedback.push('.');
             } else {
+                // Check if this color exists on another facelet of the same type
                 if (j % 2 === 0 && cornerColorsAvailable[guess[index]]-- > 0) {
                     feedback.push('/');
                 } else if (j % 2 !== 0 && edgeColorsAvailable[guess[index]]-- > 0) {

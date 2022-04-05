@@ -32,7 +32,7 @@ export default class Cube3D {
 
         this.selection = new THREE.Mesh(
             new THREE.BoxGeometry(),
-            new THREE.MeshBasicMaterial({ color: 'black', transparent: true, opacity: 0.25 }),
+            new THREE.MeshBasicMaterial({ color: 'black', transparent: true, opacity: 0.5 }),
         );
         this.selection.visible = false;
         this.scene.add(this.selection);
