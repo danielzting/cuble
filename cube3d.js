@@ -9,6 +9,8 @@ export default class Cube3D {
     static CUBIE_ORDER = ['UF', 'UR', 'UB', 'UL', 'DF', 'DR', 'DB', 'DL', 'FR', 'FL', 'BR', 'BL',
         'UFR', 'URB', 'UBL', 'ULF', 'DRF', 'DFL', 'DLB', 'DBR'];
 
+    savedCubies = [];
+
     // Throttle the viewport to 10 FPS when not rotating to save power
     throttle = true;
 
@@ -50,7 +52,9 @@ export default class Cube3D {
         for (let i = 0; i < 3; i++) {
             for (let j = 0; j < 3; j++) {
                 for (let k = 0; k < 3; k++) {
-                    this.scene.add(new Cubie(i - 1, j - 1, k - 1, CUBIES[i * 9 + j * 3 + k]));
+                    const cubie = new Cubie(i - 1, j - 1, k - 1, CUBIES[i * 9 + j * 3 + k]);
+                    this.savedCubies.push(cubie);
+                    this.scene.add(cubie);
                 }
             }
         }
@@ -63,7 +67,7 @@ export default class Cube3D {
         this.renderer.domElement.addEventListener('pointerup', event => {
             this.throttle = true;
             // Don't do anything if already won
-            if (document.getElementById('actions').style.display === 'none') return;
+            if (document.getElementById('actions').childElementCount === 1) return;
             // Ensure cursor hasn't moved since pointer was down, as that is a rotation event
             if (Math.hypot(event.clientX - this.cursorPos[0], event.clientY - this.cursorPos[1]) > 1) return;
             const clicked = this.findClickedCubie(event);
@@ -156,6 +160,22 @@ export default class Cube3D {
         const cp = solver.cornerParity();
         const pp = solver.permutationParity();
         document.getElementById('parity').innerText = `EP: ${ep}, CP: ${cp}, PP: ${pp}`;
+    }
+
+    save() {
+        for (const savedCubie of this.savedCubies) {
+            localStorage.setItem(savedCubie.name, savedCubie.colors);
+        }
+        localStorage.setItem('permutation', JSON.stringify(this.permutation));
+        localStorage.setItem('orientation', JSON.stringify(this.orientation));
+    }
+
+    load() {
+        for (const savedCubie of this.savedCubies) {
+            savedCubie.setColors(localStorage.getItem(savedCubie.name));
+        }
+        this.permutation = JSON.parse(localStorage.getItem('permutation'));
+        this.orientation = JSON.parse(localStorage.getItem('orientation'));
     }
 
     static getStateIndex(cubie) {

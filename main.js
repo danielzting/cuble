@@ -7,7 +7,8 @@ import Cube3D from './cube3d.js';
 const feedback = new Cube2D(document.getElementById('feedback'));
 const cube = new Cube3D();
 // Generate random states until one is found valid
-const rng = seedrandom(new Date().toDateString());
+const today = new Date().toDateString();
+const rng = seedrandom(today);
 const solver = new RubiksCubeSolver();
 do {
     // Generate random permutation
@@ -37,12 +38,22 @@ document.addEventListener('keyup', event => {
         check();
     }
 });
-let guesses = 0;
+
+if (localStorage.getItem('today') !== today) {
+    localStorage.setItem('today', today);
+    localStorage.setItem('guesses', -1);
+    cube.save();
+} else {
+    cube.load();
+}
+let guesses = localStorage.getItem('guesses');
 check();
 cube.updateParity();
 
 function check() {
-    guesses++;
+    localStorage.setItem('guesses', guesses++);
+    document.getElementById('guess').innerText = guesses + ' ✅';
+    cube.save();
     solver.currentState = [...cube.permutation, ...cube.orientation];
     // solver.js does not check all numbers are in valid [0, 20) range
     if (cube.permutation.includes(-1) || !solver.verifyState()) {
@@ -66,6 +77,7 @@ function check() {
                     origin: { x: .5, y: .6 },
                 });
                 cube.selection.visible = false;
+                document.getElementById('parity').innerText = `You won in ${guesses} guesses!`;
                 document.getElementById('picker').replaceChildren();
                 const share = document.createElement('button');
                 share.innerText = '📋 Share';
