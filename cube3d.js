@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import RubiksCubeSolver from './lib/solver.js';
 import Cubie from './cubie.js';
 import COLORS from './colors.js';
 
@@ -124,6 +125,7 @@ export default class Cube3D {
                     this.permutation[stateIndex] = Cube3D.getStateIndex(piece);
                     this.orientation[stateIndex] = 0;
                     this.initPicker(cubie, true);
+                    this.updateParity();
                 }
             }
 
@@ -133,6 +135,7 @@ export default class Cube3D {
                 cubie.erase();
                 this.permutation[stateIndex] = -1;
                 this.initPicker(cubie, true);
+                this.updateParity();
             };
             rotate.disabled = false;
             rotate.onclick = () => {
@@ -141,8 +144,18 @@ export default class Cube3D {
                 if (this.orientation[stateIndex] < 0) {
                     this.orientation[stateIndex] = cubie.name.length - 1;
                 }
+                this.updateParity();
             }
         }
+    }
+
+    updateParity() {
+        const solver = new RubiksCubeSolver();
+        solver.currentState = [...this.permutation, ...this.orientation];
+        const ep = solver.edgeParity();
+        const cp = solver.cornerParity();
+        const pp = solver.permutationParity();
+        document.getElementById('parity').innerText = `EP: ${ep}, CP: ${cp}, PP: ${pp}`;
     }
 
     static getStateIndex(cubie) {

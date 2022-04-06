@@ -12,6 +12,14 @@ body {
     transform: translateX(-35%);
 }
 
+#parity {
+    position: fixed;
+    top: 30%;
+    width: 100%;
+    color: white;
+    margin: 0;
+}
+
 #picker {
     position: fixed;
     bottom: 15%;

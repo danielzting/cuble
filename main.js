@@ -38,7 +38,8 @@ document.addEventListener('keyup', event => {
     }
 });
 let guesses = 0;
-// check();
+check();
+cube.updateParity();
 
 function check() {
     guesses++;
@@ -74,7 +75,7 @@ function check() {
                     const today = new Date().toISOString().substring(0, 10);
                     const result = `Cuble ${today}: ${guesses} guesses`;
                     navigator.clipboard.writeText(result).then(
-                        () => share.innerText = '✅ Copied to clipboard!',
+                        () => share.innerText = '✅ Copied results to clipboard!',
                         () => share.innerText = '❌ Could not copy to clipboard!',
                     );
                 }
