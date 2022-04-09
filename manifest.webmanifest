@@ -1,0 +1,1 @@
+{"name":"Cuble","short_name":"Cuble","start_url":"/cuble/","display":"standalone","background_color":"black","lang":"en","scope":"/cuble/","description":"The Wordle of Rubik's Cubes! Guess the scramble in as few tries as you can.","icons":[{"src":"https://raw.githubusercontent.com/DanielZTing/cuble/master/favicon.png","sizes":"512x512","type":"image/png"}],"theme_color":"black"}
