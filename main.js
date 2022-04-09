@@ -29,6 +29,23 @@ do {
 } while (!solver.verifyState());
 const answerColors = stateToFaceletColors(solver.currentState);
 
+// Set up tutorial
+const example = new Cube2D(document.getElementById('example'));
+example.drawFace(0, 0, 'ULFRUDUBU', '.XXX.//XX');
+function toggleTutorial() {
+    const tutorial = document.getElementById('modal-container');
+    if (tutorial.style.display === 'none') {
+        tutorial.style.display = 'block';
+    } else {
+        tutorial.style.display = 'none';
+    }
+}
+document.getElementById('toggleTutorial').onclick = toggleTutorial;
+if (!localStorage.getItem('tutorialComplete')) {
+    toggleTutorial();
+    localStorage.setItem('tutorialComplete', true);
+}
+
 // Set up guess button
 const guess = document.getElementById('guess');
 guess.onclick = check;
