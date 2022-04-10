@@ -31,7 +31,7 @@ const answerColors = stateToFaceletColors(solver.currentState);
 
 // Set up tutorial
 const example = new Cube2D(document.getElementById('example'));
-example.drawFace(0, 0, 'ULFRUDUBU', '.XXX.//XX');
+example.drawFace(0, 0, 'ULDRUFUBU', '.XXX.//XX');
 function toggleTutorial() {
     const tutorial = document.getElementById('modal-container');
     if (tutorial.style.display === 'none') {
@@ -40,7 +40,8 @@ function toggleTutorial() {
         tutorial.style.display = 'none';
     }
 }
-document.getElementById('toggleTutorial').onclick = toggleTutorial;
+document.getElementById('tutorial').onclick = toggleTutorial;
+document.getElementById('play').onclick = toggleTutorial;
 if (!localStorage.getItem('tutorialComplete')) {
     toggleTutorial();
     localStorage.setItem('tutorialComplete', true);

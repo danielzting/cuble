@@ -26,14 +26,14 @@ export default class Cube2D {
         this.canvas.fillRect(x, y, Cube2D.SIZE, Cube2D.SIZE);
         if (feedback !== '.') {
             this.canvas.beginPath();
-            this.canvas.moveTo(x, y);
-            this.canvas.lineTo(x + Cube2D.SIZE, y + Cube2D.SIZE);
+            this.canvas.moveTo(x + Cube2D.SIZE, y);
+            this.canvas.lineTo(x, y + Cube2D.SIZE);
             this.canvas.stroke();
         }
         if (feedback === 'X') {
             this.canvas.beginPath();
-            this.canvas.moveTo(x + Cube2D.SIZE, y);
-            this.canvas.lineTo(x, y + Cube2D.SIZE);
+            this.canvas.moveTo(x, y);
+            this.canvas.lineTo(x + Cube2D.SIZE, y + Cube2D.SIZE);
             this.canvas.stroke();
         }
     }

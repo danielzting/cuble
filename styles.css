@@ -4,18 +4,16 @@ body {
     text-align: center;
 }
 
-.action,
-#picker canvas {
+.action {
     border-radius: 5px;
 }
 
-#toggleTutorial {
+#tutorial {
     position: fixed;
     right: 0;
     background-color: black;
     border: none;
     font-size: larger;
-    z-index: 100000;
 }
 
 #modal-container {
@@ -38,6 +36,19 @@ body {
 #example {
     width: 300px;
     margin-bottom: -100px;
+}
+
+#play {
+    width: 100%;
+    font-family: 'Rubik', sans-serif;
+    font-size: larger;
+    border-width: thin;
+    background-color: black;
+    color: white;
+    border-style: solid;
+    border-color: white;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
 }
 
 #feedback {

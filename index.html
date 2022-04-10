@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <link rel="icon" type="image/png" href="favicon.png">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Cuble - Wordle for Cubers</title>
+    <title>Cuble</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Rubik&display=swap" rel="stylesheet">
@@ -13,13 +13,13 @@
 </head>
 
 <body>
-    <button id="toggleTutorial">ℹ️</button>
+    <button id="tutorial">ℹ️</button>
     <div id="modal-container" style="display: none">
         <div id="modal">
             <h1>HOW TO PLAY</h1>
             <p>Guess the CUBLE in as few tries as you can.</p>
-            <p>Each guess must be a solvable cube. Status indicators for corner/edge orientation and permutation parity
-                are provided for your convenience.</p>
+            <p>Each guess must be a solvable cube. Status indicators for corner/edge orientation parity and permutation
+                parity are provided for your convenience.</p>
             <p>Click or tap on a piece to select it. Hit ❌ to erase a piece, 🔄 to flip an edge or twist a corner, and ✅
                 to submit.
             </p>
@@ -29,11 +29,13 @@
             <h2>Example</h2>
             <canvas id="example"></canvas>
             <p>The white top left corner facelet is the correct color.</p>
-            <p>The bottom left corner facelet is NOT white, but there is another CORNER piece on the same face that is
+            <p>The bottom left corner facelet that is /'ed out is NOT white, but there is another CORNER piece on the
+                same face that is
                 white.</p>
-            <p>The right edge facelet is NOT yellow, but there is another EDGE piece on the same face that is yellow.
+            <p>The right edge facelet that is /'ed out is NOT green, but there is another EDGE piece on the same face
+                that is green.
             </p>
-            <p>The rest of the colors that are crossed out do not appear anywhere else on the white face.</p>
+            <p>The rest of the colors that are X'ed out do not appear anywhere else on the white face.</p>
             <hr>
             <h2>Notes and Tips</h2>
             <p>To help get you started, the results of guessing the solved cube are shown first. This free guess does
@@ -54,7 +56,8 @@
             <p>If corner parity (CP) is nonzero, twist one or more corners until it reaches zero.</p>
             <p>If permutation parity (PP) is nonzero, swap any two pieces.</p>
             <hr>
-            <p>To toggle this tutorial, click the info icon in the top right corner.</p>
+            <p>To get back to this tutorial, click the ℹ️ icon in the top right corner.</p>
+            <button id="play">PLAY</button>
         </div>
     </div>
     <canvas id="feedback"></canvas>

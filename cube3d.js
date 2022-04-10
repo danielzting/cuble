@@ -103,6 +103,10 @@ export default class Cube3D {
                 CUBIES.push('UB', 'UL', 'DB', 'DL', 'BL', 'FL', 'UF', 'UR', 'DF', 'DR', 'BR', 'FR');
             } else if (cubie.name.length === 3) {
                 CUBIES.push('UBL', 'ULF', 'UFR', 'URB', 'DLB', 'DFL', 'DRF', 'DBR');
+            } else {
+                erase.disabled = true;
+                rotate.disabled = true;
+                return;
             }
             const stateIndex = Cube3D.getStateIndex(cubie.name);
             for (const piece of CUBIES) {
@@ -160,6 +164,11 @@ export default class Cube3D {
         const cp = solver.cornerParity();
         const pp = solver.permutationParity();
         document.getElementById('parity').innerText = `EP: ${ep}, CP: ${cp}, PP: ${pp}`;
+        if (ep !== 0 || cp !== 0 || pp !== 0) {
+            document.getElementById('parity').style.color = 'red';
+        } else {
+            document.getElementById('parity').style.color = 'white';
+        }
     }
 
     save() {
