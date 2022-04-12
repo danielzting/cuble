@@ -27,8 +27,9 @@ do {
     }
     solver.currentState = [...permutation, ...orientation];
 } while (!solver.verifyState());
-const answerColors = stateToFaceletColors(solver.currentState);
-const cube = new Cube3D(solver.currentState);
+const answerState = solver.currentState;
+const answerColors = stateToFaceletColors(answerState);
+const cube = new Cube3D(answerState);
 
 // Set up tutorial
 const example = new Cube2D(document.getElementById('example'));
@@ -61,25 +62,30 @@ document.addEventListener('keyup', event => {
 if (localStorage.getItem('today') !== today) {
     localStorage.setItem('today', today);
     localStorage.setItem('guesses', -1);
+    localStorage.setItem('score', JSON.stringify(Array(20).fill(-1)));
     cube.save();
 } else {
     cube.load();
 }
 let guesses = localStorage.getItem('guesses');
+let score = JSON.parse(localStorage.getItem('score'));
 check();
 cube.updateParity();
 
 function check() {
-    localStorage.setItem('guesses', guesses++);
-    document.getElementById('guess').innerText = guesses + ' ✅';
-    cube.save();
-    cube.initPicker(cube.selection);
     solver.currentState = [...cube.permutation, ...cube.orientation];
     // solver.js does not check all numbers are in valid [0, 20) range
     if (cube.permutation.includes(-1) || !solver.verifyState()) {
         guess.classList.add('shake');
     } else {
+        // Increment guesses, save state, and show feedback
+        localStorage.setItem('guesses', guesses++);
+        document.getElementById('guess').innerText = guesses + ' ✅';
+        cube.save();
+        updateScore(score);
+        cube.initPicker(cube.selection);
         const currentColors = stateToFaceletColors(solver.currentState);
+        // Check answer
         feedback.drawCube(currentColors, getFeedback(currentColors, answerColors));
         if (currentColors.toString() === answerColors.toString()) {
             // Show confetti
@@ -105,7 +111,7 @@ function check() {
                 share.style.flex = '1';
                 share.onclick = () => {
                     const today = new Date().toISOString().substring(0, 10);
-                    const result = `Cuble ${today}: ${guesses} guesses`;
+                    const result = `Cuble ${today}: ${guesses} guesses, ${score.join(' ')}`;
                     navigator.clipboard.writeText(result).then(
                         () => share.innerText = '✅ Copied results to clipboard!',
                         () => share.innerText = '❌ Could not copy to clipboard!',
@@ -114,6 +120,16 @@ function check() {
                 document.getElementById('actions').replaceChildren(share);
                 setTimeout(() => canvas.style.display = 'none', 3000);
             }, Cube2D.DELAY * 100);
+        }
+    }
+}
+
+function updateScore(score) {
+    for (let i = 0; i < score.length; i++) {
+        if (cube.permutation[i] === answerState[i] && cube.orientation[i] === answerState[i + 20]) {
+            if (score[i] === -1) {
+                score[i] = guesses;
+            }
         }
     }
 }
