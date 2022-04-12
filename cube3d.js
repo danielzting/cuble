@@ -17,9 +17,8 @@ export default class Cube3D {
     permutation = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
     orientation = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
-    constructor() {
+    constructor(answerState) {
         // Set up scene, camera, renderer, and controls
-
         this.scene = new THREE.Scene();
 
         this.camera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -76,6 +75,9 @@ export default class Cube3D {
             this.initPicker(clicked.object);
         });
 
+        this.answerPermutation = answerState.slice(0, 20);
+        this.answerOrientation = answerState.slice(20);
+
         // Automatically resize viewport when window is resized
         window.addEventListener('resize', () => {
             this.camera.aspect = window.innerWidth / window.innerHeight;
@@ -84,13 +86,13 @@ export default class Cube3D {
         });
     }
 
-    initPicker(cubie, keepSelection) {
+    initPicker(cubie) {
         // Set up cubie picker
         const picker = document.getElementById('picker');
         const erase = document.getElementById('erase');
         const rotate = document.getElementById('rotate');
         picker.replaceChildren();
-        if (!keepSelection && cubie.position.equals(this.selection.position)) {
+        if (cubie.position.equals(this.selection.position)) {
             this.selection.position.set(0, 0, 0);
             this.selection.visible = false;
             erase.disabled = true;
@@ -109,6 +111,8 @@ export default class Cube3D {
                 return;
             }
             const stateIndex = Cube3D.getStateIndex(cubie.name);
+            // Prevent user from modifying correct pieces
+            if (this.correct(stateIndex)) return;
             for (const piece of CUBIES) {
                 // Initialize button
                 const buttonsPerRow = (piece.length === 2) ? 6 : 4;
@@ -132,7 +136,7 @@ export default class Cube3D {
                     cubie.setColors(piece);
                     this.permutation[stateIndex] = Cube3D.getStateIndex(piece);
                     this.orientation[stateIndex] = 0;
-                    this.initPicker(cubie, true);
+                    this.initPicker(cubie);
                     this.updateParity();
                 }
             }
@@ -142,7 +146,7 @@ export default class Cube3D {
             erase.onclick = () => {
                 cubie.erase();
                 this.permutation[stateIndex] = -1;
-                this.initPicker(cubie, true);
+                this.initPicker(cubie);
                 this.updateParity();
             };
             rotate.disabled = false;
@@ -169,6 +173,13 @@ export default class Cube3D {
         } else {
             document.getElementById('parity').style.color = 'white';
         }
+    }
+
+    correct(index) {
+        const lastPermutation = JSON.parse(localStorage.getItem('permutation'));
+        const lastOrientation = JSON.parse(localStorage.getItem('orientation'));
+        return lastPermutation[index] === this.answerPermutation[index]
+            && lastOrientation[index] === this.answerOrientation[index];
     }
 
     save() {

@@ -53,7 +53,7 @@ body {
 
 #feedback {
     position: fixed;
-    top: 5%;
+    top: 20px;
     width: 300px;
     left: 50%;
     transform: translateX(-35%);

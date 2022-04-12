@@ -6,7 +6,6 @@ import Cube2D from './cube2d.js';
 import Cube3D from './cube3d.js';
 
 const feedback = new Cube2D(document.getElementById('feedback'));
-const cube = new Cube3D();
 // Generate random states until one is found valid
 const today = new Date().toDateString();
 const rng = seedrandom(today);
@@ -29,6 +28,7 @@ do {
     solver.currentState = [...permutation, ...orientation];
 } while (!solver.verifyState());
 const answerColors = stateToFaceletColors(solver.currentState);
+const cube = new Cube3D(solver.currentState);
 
 // Set up tutorial
 const example = new Cube2D(document.getElementById('example'));
@@ -73,6 +73,7 @@ function check() {
     localStorage.setItem('guesses', guesses++);
     document.getElementById('guess').innerText = guesses + ' ✅';
     cube.save();
+    cube.initPicker(cube.selection);
     solver.currentState = [...cube.permutation, ...cube.orientation];
     // solver.js does not check all numbers are in valid [0, 20) range
     if (cube.permutation.includes(-1) || !solver.verifyState()) {
