@@ -1,5 +1,6 @@
 import confetti from 'canvas-confetti';
 import seedrandom from 'seedrandom';
+import { registerSW } from 'virtual:pwa-register';
 import RubiksCubeSolver from './lib/solver.js';
 import Cube2D from './cube2d.js';
 import Cube3D from './cube3d.js';
@@ -196,8 +197,7 @@ function shuffle(array) {
     return array;
 }
 
-window.addEventListener('load', () => {
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('service-worker.js');
-    }
-});
+if ('serviceWorker' in navigator) {
+    // && !/localhost/.test(window.location)) {
+    registerSW();
+}
