@@ -31,21 +31,81 @@ const answerState = solver.currentState;
 const answerColors = stateToFaceletColors(answerState);
 const cube = new Cube3D(answerState);
 
+function toggleVisible(id) {
+    const element = document.getElementById(id);
+    if (element.style.display === 'none') {
+        element.style.display = 'block';
+    } else {
+        element.style.display = 'none';
+    }
+}
+// Set up statistics
+let stats = JSON.parse(localStorage.getItem('stats'));
+if (stats === null) {
+    stats = Array(22).fill(0);
+}
+document.getElementById('open-stats').onclick = () => toggleVisible('stats-container');
+document.getElementById('close-stats').onclick = () => toggleVisible('stats-container');
+// Start graph from high ("low") score
+let start = 0;
+while (stats[start] === 0) {
+    start++;
+    if (start === 18) {
+        break;
+    }
+}
+let max = 0;
+for (let i = start; i < stats.length; i++) {
+    max = Math.max(max, stats[i]);
+}
+const THICKNESS = 35;
+const canvas = document.getElementById('graph');
+canvas.width *= 2;
+canvas.height = THICKNESS * (stats.length - start);
+canvas.height *= 2;
+const ctx = canvas.getContext('2d');
+ctx.scale(2, 2);
+ctx.fillStyle = 'white';
+ctx.font = 'larger Rubik';
+let y = 0;
+for (let i = start; i < stats.length; i++) {
+    ctx.fillText(i === stats.length - 1 ? 'X' : i, 0, y + 25);
+    let value = stats[i] / max * (canvas.width / 2 - THICKNESS);
+    if (isNaN(value) || value < THICKNESS) {
+        value = THICKNESS;
+    }
+    ctx.fillRect(THICKNESS, y + 5, value, THICKNESS - 10);
+    ctx.fillStyle = 'black';
+    const offset = 10 * (String(stats[i]).length - 1);
+    ctx.fillText(stats[i], value + 15 - offset, y + 25);
+    ctx.fillStyle = 'white';
+    y += THICKNESS;
+}
+
+// Set up countdown timer
+const midnight = new Date(new Date().getTime() + 24 * 60 * 60 * 1000);
+midnight.setHours(0);
+midnight.setMinutes(0);
+midnight.setSeconds(0);
+function updateClock() {
+    const msLeft = Date.parse(midnight) - Date.parse(new Date());
+    const secondsLeft = Math.floor((msLeft / 1000) % 60);
+    const minutesLeft = Math.floor((msLeft / 1000 / 60) % 60);
+    const hoursLeft = Math.floor((msLeft / (1000 * 60 * 60)) % 24);
+    document.getElementById('hours').innerText = ('0' + hoursLeft).slice(-2);
+    document.getElementById('minutes').innerText = ('0' + minutesLeft).slice(-2);
+    document.getElementById('seconds').innerText = ('0' + secondsLeft).slice(-2);
+}
+updateClock();
+setInterval(updateClock, 1000);
+
 // Set up tutorial
 const example = new Cube2D(document.getElementById('example'));
 example.drawFace(0, 0, 'ULDRUFUBU', '.XXX.//XX');
-function toggleTutorial() {
-    const tutorial = document.getElementById('modal-container');
-    if (tutorial.style.display === 'none') {
-        tutorial.style.display = 'block';
-    } else {
-        tutorial.style.display = 'none';
-    }
-}
-document.getElementById('tutorial').onclick = toggleTutorial;
-document.getElementById('play').onclick = toggleTutorial;
+document.getElementById('open-tutorial').onclick = () => toggleVisible('tutorial-container');
+document.getElementById('close-tutorial').onclick = () => toggleVisible('tutorial-container');
 if (!localStorage.getItem('tutorialComplete')) {
-    toggleTutorial();
+    toggleVisible('tutorial-container');
     localStorage.setItem('tutorialComplete', true);
 }
 
@@ -53,12 +113,8 @@ if (!localStorage.getItem('tutorialComplete')) {
 const guess = document.getElementById('guess');
 guess.onclick = check;
 guess.addEventListener('animationend', () => guess.classList.remove('shake'));
-document.addEventListener('keyup', event => {
-    if (event.key === 'Enter') {
-        check();
-    }
-});
 
+// Load state from storage
 if (localStorage.getItem('today') !== today) {
     localStorage.setItem('today', today);
     localStorage.setItem('guesses', -1);
@@ -86,16 +142,15 @@ function check() {
         cube.initPicker(cube.selection);
         const currentColors = stateToFaceletColors(solver.currentState);
         // Check answer
-        feedback.drawCube(currentColors, getFeedback(currentColors, answerColors));
+        feedback.drawCube(currentColors, answerColors);
         if (currentColors.toString() === answerColors.toString()) {
+            stats[guesses]++;
+            localStorage.setItem('stats', JSON.stringify(stats));
             // Show confetti
             const canvas = document.getElementById('confetti');
             canvas.style.display = 'block';
             setTimeout(() => {
-                let myConfetti = confetti.create(canvas, {
-                    resize: true,
-                    useWorker: true
-                });
+                let myConfetti = confetti.create(canvas, { resize: true, useWorker: true });
                 myConfetti({
                     particleCount: 100,
                     spread: 135,
@@ -116,7 +171,7 @@ function check() {
                         () => share.innerText = '✅ Copied results to clipboard!',
                         () => share.innerText = '❌ Could not copy to clipboard!',
                     );
-                }
+                };
                 document.getElementById('actions').replaceChildren(share);
                 setTimeout(() => canvas.style.display = 'none', 3000);
             }, Cube2D.DELAY * 100);
@@ -166,42 +221,6 @@ function stateToFaceletColors(state) {
         }
     }
     return colors;
-}
-
-function getFeedback(guess, answer) {
-    const feedback = [];
-    for (let i = 0; i < 6; i++) {
-        // Count how many each color on the solution face were guessed incorrectly
-        // This is used to distinguish "gray" versus "yellow" feedback
-        const edgeColorsAvailable = { U: 0, L: 0, F: 0, R: 0, B: 0, D: 0 };
-        const cornerColorsAvailable = { U: 0, L: 0, F: 0, R: 0, B: 0, D: 0 };
-        for (let j = 0; j < 9; j++) {
-            const index = i * 9 + j;
-            if (guess[index] !== answer[index]) {
-                if (j % 2 === 0) {
-                    cornerColorsAvailable[answer[index]]++;
-                } else {
-                    edgeColorsAvailable[answer[index]]++;
-                }
-            }
-        }
-        for (let j = 0; j < 9; j++) {
-            const index = i * 9 + j;
-            if (guess[index] === answer[index]) {
-                feedback.push('.');
-            } else {
-                // Check if this color exists on another facelet of the same type
-                if (j % 2 === 0 && cornerColorsAvailable[guess[index]]-- > 0) {
-                    feedback.push('/');
-                } else if (j % 2 !== 0 && edgeColorsAvailable[guess[index]]-- > 0) {
-                    feedback.push('/');
-                } else {
-                    feedback.push('X');
-                }
-            }
-        }
-    }
-    return feedback;
 }
 
 function shuffle(array) {

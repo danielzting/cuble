@@ -55,20 +55,57 @@ export default class Cube2D {
     /**
      * Draw a 2D projection of the cube with the given feedback.
      * Order is ULFRBD, left-to-right row-major order (like reading English).
-     * @param {Array<string>} colors 54 characters representing the color of each facelet
-     * @param {Array<string>} feedback 54 characters (period, slash or X) to overlay on top of each facelet
+     * @param {Array<string>} guess 54 characters representing the color of each guessed facelet
+     * @param {Array<string>} answer 54 characters representing the color of each answer facelet
      */
-    drawCube(colors, feedback) {
+    drawCube(guess, answer) {
+        const feedback = Cube2D.getFeedback(guess, answer);
         this.canvas.clearRect(0, 0, this.width, this.height);
-        this.drawFace(Cube2D.FACESIZE, 0, colors.slice(0, 9), feedback.slice(0, 9));
+        this.drawFace(Cube2D.FACESIZE, 0, guess.slice(0, 9), feedback.slice(0, 9));
         for (let i = 0; i < 4; i++) {
             this.drawFace(
                 i * Cube2D.FACESIZE,
                 Cube2D.FACESIZE,
-                colors.slice(i * 9 + 9, i * 9 + 18),
+                guess.slice(i * 9 + 9, i * 9 + 18),
                 feedback.slice(i * 9 + 9, i * 9 + 18)
             );
         }
-        this.drawFace(Cube2D.FACESIZE, Cube2D.FACESIZE * 2, colors.slice(45), feedback.slice(45));
+        this.drawFace(Cube2D.FACESIZE, Cube2D.FACESIZE * 2, guess.slice(45), feedback.slice(45));
+    }
+
+    static getFeedback(guess, answer) {
+        const feedback = [];
+        for (let i = 0; i < 6; i++) {
+            // Count how many each color on the solution face were guessed incorrectly
+            // This is used to distinguish "gray" versus "yellow" feedback
+            const edgeColorsAvailable = { U: 0, L: 0, F: 0, R: 0, B: 0, D: 0 };
+            const cornerColorsAvailable = { U: 0, L: 0, F: 0, R: 0, B: 0, D: 0 };
+            for (let j = 0; j < 9; j++) {
+                const index = i * 9 + j;
+                if (guess[index] !== answer[index]) {
+                    if (j % 2 === 0) {
+                        cornerColorsAvailable[answer[index]]++;
+                    } else {
+                        edgeColorsAvailable[answer[index]]++;
+                    }
+                }
+            }
+            for (let j = 0; j < 9; j++) {
+                const index = i * 9 + j;
+                if (guess[index] === answer[index]) {
+                    feedback.push('.');
+                } else {
+                    // Check if this color exists on another facelet of the same type
+                    if (j % 2 === 0 && cornerColorsAvailable[guess[index]]-- > 0) {
+                        feedback.push('/');
+                    } else if (j % 2 !== 0 && edgeColorsAvailable[guess[index]]-- > 0) {
+                        feedback.push('/');
+                    } else {
+                        feedback.push('X');
+                    }
+                }
+            }
+        }
+        return feedback;
     }
 }

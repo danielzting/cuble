@@ -8,7 +8,19 @@ body {
     border-radius: 5px;
 }
 
-#tutorial {
+#open-stats {
+    position: fixed;
+    left: 0;
+    background-color: black;
+    border: none;
+    font-size: larger;
+}
+
+#graph {
+    width: 300px;
+}
+
+#open-tutorial {
     position: fixed;
     right: 0;
     background-color: black;
@@ -16,7 +28,7 @@ body {
     font-size: larger;
 }
 
-#modal-container {
+.container {
     position: fixed;
     width: 100%;
     height: 100%;
@@ -25,7 +37,7 @@ body {
     overflow-y: auto;
 }
 
-#modal {
+.modal {
     margin: 0 auto;
     padding: 0 2rem;
     color: white;
@@ -38,7 +50,7 @@ body {
     margin-bottom: -100px;
 }
 
-#play {
+.ok {
     width: 100%;
     font-family: 'Rubik', sans-serif;
     font-size: larger;
