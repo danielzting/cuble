@@ -4,6 +4,7 @@ import { registerSW } from 'virtual:pwa-register';
 import RubiksCubeSolver from './lib/solver.js';
 import Cube2D from './cube2d.js';
 import Cube3D from './cube3d.js';
+import updateStats from './graph.js';
 
 const feedback = new Cube2D(document.getElementById('feedback'));
 // Generate random states until one is found valid
@@ -46,41 +47,7 @@ if (stats === null) {
 }
 document.getElementById('open-stats').onclick = () => toggleVisible('stats-container');
 document.getElementById('close-stats').onclick = () => toggleVisible('stats-container');
-// Start graph from high ("low") score
-let start = 0;
-while (stats[start] === 0) {
-    start++;
-    if (start === 18) {
-        break;
-    }
-}
-let max = 0;
-for (let i = start; i < stats.length; i++) {
-    max = Math.max(max, stats[i]);
-}
-const THICKNESS = 35;
-const canvas = document.getElementById('graph');
-canvas.width *= 2;
-canvas.height = THICKNESS * (stats.length - start);
-canvas.height *= 2;
-const ctx = canvas.getContext('2d');
-ctx.scale(2, 2);
-ctx.fillStyle = 'white';
-ctx.font = 'larger Rubik';
-let y = 0;
-for (let i = start; i < stats.length; i++) {
-    ctx.fillText(i === stats.length - 1 ? 'X' : i, 0, y + 25);
-    let value = stats[i] / max * (canvas.width / 2 - THICKNESS);
-    if (isNaN(value) || value < THICKNESS) {
-        value = THICKNESS;
-    }
-    ctx.fillRect(THICKNESS, y + 5, value, THICKNESS - 10);
-    ctx.fillStyle = 'black';
-    const offset = 10 * (String(stats[i]).length - 1);
-    ctx.fillText(stats[i], value + 15 - offset, y + 25);
-    ctx.fillStyle = 'white';
-    y += THICKNESS;
-}
+updateStats(document.getElementById('graph'), stats);
 
 // Set up countdown timer
 const midnight = new Date(new Date().getTime() + 24 * 60 * 60 * 1000);
@@ -119,6 +86,7 @@ if (localStorage.getItem('today') !== today) {
     localStorage.setItem('today', today);
     localStorage.setItem('guesses', -1);
     localStorage.setItem('score', JSON.stringify(Array(20).fill(-1)));
+    localStorage.removeItem('complete');
     cube.save();
 } else {
     cube.load();
@@ -144,8 +112,12 @@ function check() {
         // Check answer
         feedback.drawCube(currentColors, answerColors);
         if (currentColors.toString() === answerColors.toString()) {
-            stats[guesses]++;
-            localStorage.setItem('stats', JSON.stringify(stats));
+            if (!localStorage.getItem('complete')) {
+                localStorage.setItem('complete', true);
+                stats[guesses]++;
+                localStorage.setItem('stats', JSON.stringify(stats));
+                updateStats(document.getElementById('graph'), stats);
+            }
             // Show confetti
             const canvas = document.getElementById('confetti');
             canvas.style.display = 'block';

@@ -13,9 +13,9 @@ export default class Cube2D {
      */
     constructor(canvas) {
         // Fix to prevent canvas from looking blurry on Retina displays
-        canvas.width *= 2;
-        canvas.height *= 2;
-        canvas.getContext('2d').scale(2, 2);
+        canvas.width *= window.devicePixelRatio;
+        canvas.height *= window.devicePixelRatio;
+        canvas.getContext('2d').scale(window.devicePixelRatio, window.devicePixelRatio);
         this.canvas = canvas.getContext('2d');
         this.width = canvas.width;
         this.height = canvas.height;
