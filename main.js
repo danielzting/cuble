@@ -159,6 +159,7 @@ function updateScore(score) {
             }
         }
     }
+    localStorage.setItem('score', JSON.stringify(score));
 }
 
 function stateToFaceletColors(state) {
