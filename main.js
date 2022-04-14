@@ -4,7 +4,7 @@ import { registerSW } from 'virtual:pwa-register';
 import RubiksCubeSolver from './lib/solver.js';
 import Cube2D from './cube2d.js';
 import Cube3D from './cube3d.js';
-import updateStats from './graph.js';
+import Graph from './graph.js';
 
 const feedback = new Cube2D(document.getElementById('feedback'));
 // Generate random states until one is found valid
@@ -45,9 +45,12 @@ let stats = JSON.parse(localStorage.getItem('stats'));
 if (stats === null) {
     stats = Array(22).fill(0);
 }
-document.getElementById('open-stats').onclick = () => toggleVisible('stats-container');
+const graph = new Graph(document.getElementById('graph'));
+document.getElementById('open-stats').onclick = () => {
+    toggleVisible('stats-container');
+    graph.update(stats);
+};
 document.getElementById('close-stats').onclick = () => toggleVisible('stats-container');
-updateStats(document.getElementById('graph'), stats);
 
 // Set up countdown timer
 const midnight = new Date(new Date().getTime() + 24 * 60 * 60 * 1000);
@@ -116,7 +119,6 @@ function check() {
                 localStorage.setItem('complete', true);
                 stats[Math.min(guesses, stats.length - 1)]++;
                 localStorage.setItem('stats', JSON.stringify(stats));
-                updateStats(document.getElementById('graph'), stats);
             }
             // Show confetti
             const canvas = document.getElementById('confetti');
