@@ -4,8 +4,8 @@ export default function updateStats(canvas, stats) {
     let start = 0;
     while (stats[start] === 0) {
         start++;
-        // Start from 18 no matter what
-        if (start === 18) {
+        // Start from 15 no matter what
+        if (start === 15) {
             break;
         }
     }
@@ -25,12 +25,12 @@ export default function updateStats(canvas, stats) {
     ctx.font = 'larger Rubik';
     let y = 0;
     for (let i = start; i < stats.length; i++) {
-        ctx.fillText(i === stats.length - 1 ? 'X' : i, 0, y + 25);
+        ctx.fillText(i === stats.length - 1 ? `>${stats.length - 2}` : i, 0, y + 25);
         let value = stats[i] / max * (canvas.width / 2 - THICKNESS);
         if (isNaN(value) || value < THICKNESS) {
             value = THICKNESS;
         }
-        ctx.fillRect(THICKNESS, y + 5, value, THICKNESS - 10);
+        ctx.fillRect(THICKNESS * 1.2, y + 5, value, THICKNESS - 10);
         ctx.fillStyle = 'black';
         const offset = 10 * (String(stats[i]).length - 1);
         ctx.fillText(stats[i], value + 15 - offset, y + 25);

@@ -94,7 +94,6 @@ if (localStorage.getItem('today') !== today) {
 let guesses = localStorage.getItem('guesses');
 let score = JSON.parse(localStorage.getItem('score'));
 check();
-cube.updateParity();
 
 function check() {
     solver.currentState = [...cube.permutation, ...cube.orientation];
@@ -106,7 +105,8 @@ function check() {
         localStorage.setItem('guesses', guesses++);
         document.getElementById('guess').innerText = guesses + ' ✅';
         cube.save();
-        updateScore(score);
+        cube.updateParity();
+        document.getElementById('parity').innerText += `, ${updateScore(score)}/20 ✔`;
         cube.initPicker(cube.selection);
         const currentColors = stateToFaceletColors(solver.currentState);
         // Check answer
@@ -114,7 +114,7 @@ function check() {
         if (currentColors.toString() === answerColors.toString()) {
             if (!localStorage.getItem('complete')) {
                 localStorage.setItem('complete', true);
-                stats[guesses]++;
+                stats[Math.min(guesses, stats.length - 1)]++;
                 localStorage.setItem('stats', JSON.stringify(stats));
                 updateStats(document.getElementById('graph'), stats);
             }
@@ -138,7 +138,7 @@ function check() {
                 share.style.flex = '1';
                 share.onclick = () => {
                     const today = new Date().toISOString().substring(0, 10);
-                    const result = `Cuble ${today}: ${guesses} guesses, ${score.join(' ')}`;
+                    const result = `Cuble ${today}: ${guesses}/20, ${score.join(' ')}`;
                     navigator.clipboard.writeText(result).then(
                         () => share.innerText = '✅ Copied results to clipboard!',
                         () => share.innerText = '❌ Could not copy to clipboard!',
@@ -152,14 +152,17 @@ function check() {
 }
 
 function updateScore(score) {
+    let correct = 0;
     for (let i = 0; i < score.length; i++) {
         if (cube.permutation[i] === answerState[i] && cube.orientation[i] === answerState[i + 20]) {
+            correct++;
             if (score[i] === -1) {
                 score[i] = guesses;
             }
         }
     }
     localStorage.setItem('score', JSON.stringify(score));
+    return correct;
 }
 
 function stateToFaceletColors(state) {
