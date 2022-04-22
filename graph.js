@@ -35,7 +35,7 @@ export default class Graph {
             let y = 0;
             for (let i = start; i < stats.length; i++) {
                 ctx.fillText(i === stats.length - 1 ? `>${stats.length - 2}` : i, 0, y + 25);
-                let value = stats[i] / max * (this.canvas.width / 2 - Graph.THICKNESS);
+                let value = stats[i] / max * (this.canvas.offsetWidth - Graph.THICKNESS);
                 if (isNaN(value) || value < Graph.THICKNESS) {
                     value = Graph.THICKNESS;
                 }
