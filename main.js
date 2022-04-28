@@ -73,10 +73,18 @@ setInterval(updateClock, 1000);
 const example = new Cube2D(document.getElementById('example'));
 example.drawFace(0, 0, 'ULDRUFUBU', '.XXX.//XX');
 document.getElementById('open-tutorial').onclick = () => toggleVisible('tutorial-container');
-document.getElementById('close-tutorial').onclick = () => toggleVisible('tutorial-container');
-if (!localStorage.getItem('tutorialComplete')) {
+document.getElementById('read-tutorial').onchange = () => {
+    document.getElementById('close-tutorial').disabled = !document.getElementById('read-tutorial').checked;
+};
+document.getElementById('close-tutorial').onclick = () => {
     toggleVisible('tutorial-container');
     localStorage.setItem('tutorialComplete', true);
+};
+if (!localStorage.getItem('tutorialComplete')) {
+    toggleVisible('tutorial-container');
+} else {
+    document.getElementById('read-tutorial').checked = true;
+    document.getElementById('close-tutorial').disabled = false;
 }
 
 // Set up guess button
