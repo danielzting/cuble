@@ -28,7 +28,7 @@
     
   <script type="module" crossorigin src="/cuble/assets/index.56e88484.js"></script>
   <link rel="modulepreload" href="/cuble/assets/vendor.6bafb6cf.js">
-  <link rel="stylesheet" href="/cuble/assets/index.26d12d7a.css">
+  <link rel="stylesheet" href="/cuble/assets/index.7211668c.css">
 <link rel="manifest" href="/cuble/manifest.webmanifest"></head>
 
 <body>
@@ -52,45 +52,56 @@
             <p>Each guess must be a solvable cube. Status indicators for corner/edge orientation parity and permutation
                 parity are provided for your convenience.</p>
             <p>Click or tap on a piece to select it. Hit ❌ to erase a piece, 🔄 to flip an edge or twist a corner, and ✅
-                to submit.
-            </p>
-            <p>After each guess, a 2D projection will tell you how close your guess was to the actual scramble.</p>
+                to submit.</p>
+            <p>After each guess, a 2D projection will tell you how close your guess was to the actual scramble.
+                <em>Unmarked</em> squares are correctly colored. A square is <em>crossed out</em> if that color is not
+                found anywhere on squares of the SAME TYPE (corner or edge) on that face. A <em>slash</em> indicates the
+                square has the wrong color but there is another <em>incorrectly colored</em> square of the SAME TYPE
+                (corner or edge) with that color on that face.</p>
             <p>A new CUBLE will be available each day!</p>
             <hr>
             <h2>Example</h2>
             <canvas id="example"></canvas>
-            <p>The white top left corner facelet is the correct color.</p>
-            <p>The bottom left corner facelet that is /'ed out is NOT white, but there is another CORNER piece on the
-                same face that is
-                white.</p>
-            <p>The right edge facelet that is /'ed out is NOT green, but there is another EDGE piece on the same face
-                that is green.
-            </p>
-            <p>The rest of the colors that are X'ed out do not appear anywhere else on the white face.</p>
+            <p>The CENTER square will always be correct and cannot be changed.</p>
+            <p>The top-left CORNER is correctly colored white.</p>
+            <p>The bottom-left CORNER that is /'ed out is NOT white, but there is another CORNER on the same face that
+                is white (excluding the correct top-left CORNER).</p>
+            <p>The right EDGE that is /'ed out is NOT green, but there is another EDGE on the same face that is
+                green.</p>
+            <p>The top, left, and bottom EDGES are NOT orange, red, or blue, and those colors are not found on any other
+                EDGES. However, there could still be CORNERS with those colors.</p>
+            <p>The top-right and bottom-right CORNERS are not yellow or white, and those colors are not found on any
+                other CORNERS (after considering the slashed white bottom-left CORNER). However, there could still be
+                EDGES with those colors.</p>
             <hr>
-            <h2>Notes and Tips</h2>
+            <h2>Tips</h2>
             <p>To help get you started, the results of guessing the solved cube are shown first. This free guess does
                 not count against your score.</p>
-            <p>You can only use each piece once, so you will first have to erase one piece to change the color of
-                another.</p>
+            <p>You can only use each piece once, so you will first have to erase one piece to change another.</p>
+            <p>The game saves automatically after each guess and locks pieces that are correctly permuted and oriented
+                in place, so you don't have to worry about accidentally messing up your progress.</p>
+            <p>The numbers after the guess in the results you can copy to share after winning represent how many guesses
+                it took to get the corresponding piece in the following list correct:</p>
+            <p>UF UR UB UL DF DR DB DL FR FL BR BL UFR URB UBL ULF DRF DFL DLB DBR</p>
+            <hr>
+            <h2>Fixing an Unsolvable Cube</h2>
+            <p>Much like how WORDLE requires guesses to be valid words, CUBLE requires guesses to be solvable scrambles.
+                A cube is solvable when corner orientation parity (CP), edge orientation parity (EP), and permutation
+                parity (PP) are all zero.</p>
             <p>To ensure the cube always stays in a solvable state, try to limit yourself to the following actions:</p>
             <ul>
                 <li>Flipping two edges</li>
                 <li>Twisting three corners once</li>
-                <li>Twisting one corner twice and two corners once</li>
+                <li>Twisting one corner twice and another corner once</li>
                 <li>Cycling three pieces while preserving their orientations</li>
                 <li>Swapping two PAIRS of pieces while preserving their orientations</li>
             </ul>
-            <p>The game saves automatically after each guess and locks pieces that are correctly permuted and oriented
-                in place, so you don't have to worry about accidentally messing up your progress.</p>
-            <p>The numbers after the guess in the share text represent how many guesses it took to get the corresponding
-                piece in the following list list correct:</p>
-            <p>UF UR UB UL DF DR DB DL FR FL BR BL UFR URB UBL ULF DRF DFL DLB DBR</p>
-            <hr>
-            <h2>Fixing an Unsolvable Cube</h2>
-            <p>If edge parity (EP) is nonzero, flip any edge.</p>
-            <p>If corner parity (CP) is nonzero, twist one or more corners until it reaches zero.</p>
-            <p>If permutation parity (PP) is nonzero, swap any two pieces.</p>
+            <p>That being said, fixing an unsolvable cube is not hard:</p>
+            <ul>
+                <li>If EP is nonzero, flip any edge.</li>
+                <li>If CP is nonzero, twist one or more corners until it reaches zero.</li>
+                <li>If PP is nonzero, swap any two pieces.</li>
+            </ul>
             <hr>
             <p><a href="https://github.com/DanielZTing/cuble/issues">File a bug report or submit a feature request on
                     GitHub issues.</a></p>
