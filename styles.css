@@ -24,6 +24,16 @@ body {
     width: 100%;
 }
 
+#tutorial-container {
+    user-select: text;
+    -webkit-user-select: text;
+    -webkit-touch-callout: default;
+}
+
+a {
+    color: lightskyblue;
+}
+
 #open-tutorial {
     position: fixed;
     right: 0;
